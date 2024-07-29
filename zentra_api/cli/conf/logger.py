@@ -74,6 +74,10 @@ class DebugLogger(BaseLogger):
         log_folder = pkg_resources.files("zentra_api").joinpath("logs")
         log_filepath = Path(log_folder, log_filename)
 
+        if not log_filepath.exists():
+            Path(log_folder).mkdir(exist_ok=True)
+            log_filepath.touch(exist_ok=True)
+
         if active:  # pragma: no cover
             self.file_handler(log_filepath)
 
