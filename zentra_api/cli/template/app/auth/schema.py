@@ -7,6 +7,7 @@ class UserBase(BaseModel):
 
 class CreateUser(UserBase):
     password: str
+    is_active: bool = True
 
 
 class GetUser(UserBase):

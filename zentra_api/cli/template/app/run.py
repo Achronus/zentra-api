@@ -1,18 +1,11 @@
 import argparse
+import subprocess
 
 import uvicorn
 
 
-def development(host: str = "127.0.0.1", port: int = 8000) -> None:
-    uvicorn.run(
-        "app.main:app",
-        host=host,
-        port=port,
-        reload=True,
-        workers=1,
-        limit_concurrency=1,
-        limit_max_requests=1,
-    )
+def development(port: int = 8080) -> None:
+    subprocess.run(["fastapi", "dev", "app/main.py", "--port", port])
 
 
 def production(host: str = "0.0.0.0", port: int = 8000) -> None:
@@ -22,9 +15,9 @@ def production(host: str = "0.0.0.0", port: int = 8000) -> None:
 def start(env_mode, host: str, port: int) -> None:
     """Start the server."""
     if env_mode == "dev":
-        development(host=host, port=port)
+        development(port)
     else:
-        production(host=host, port=port)
+        production(host, port)
 
 
 if __name__ == "__main__":

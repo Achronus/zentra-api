@@ -38,6 +38,6 @@ async def http_exception_handler(request: Request, exc: HTTPException) -> JSONRe
     return zentra_json_response(exc)
 
 
-@app.get("/")
+@app.get("/", include_in_schema=False)
 def health_check():
-    return "Heath check complete"
+    return {"health": "check complete"}

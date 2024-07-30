@@ -1,7 +1,7 @@
 from typing import Annotated
 
 
-from app.auth.schema import CreateUser, GetUser, Token, UserInDB
+from app.auth.schema import CreateUser, GetUser, UserInDB
 from app.config import (
     db_dependency,
     oauth2_dependency,
@@ -14,6 +14,7 @@ from fastapi import APIRouter, Depends, HTTPException, status
 
 from sqlalchemy.orm import Session
 
+from zentra_api.schema import Token
 from zentra_api.responses import get_response_models
 from zentra_api.responses.exc import CREDENTIALS_EXCEPTION, USER_EXCEPTION
 
