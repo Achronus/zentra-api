@@ -1,7 +1,7 @@
 import secrets
 import string
 
-from .enums import JWTSize
+from zentra_api.auth.enums import JWTSize
 
 from pydantic import ConfigDict, validate_call
 

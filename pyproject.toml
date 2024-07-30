@@ -5,6 +5,7 @@ description = "A CLI tool for building FastAPI apps faster."
 authors = ["Ryan Partridge <rpartridge101@gmail.com>"]
 license = "MIT License"
 readme = "README.md"
+repository = "https://github.com/Achronus/zentra-api"
 
 [tool.poetry.scripts]
 zentra-api = "zentra_api.cli.main:app"

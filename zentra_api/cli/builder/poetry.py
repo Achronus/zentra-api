@@ -4,10 +4,9 @@ from pathlib import Path
 import toml
 
 from zentra_api.cli.conf.logger import task_error_logger, task_test_logger
+from zentra_api.cli.constants import PYTHON_VERSION, pypi_url
 
 from pydantic import BaseModel, field_validator
-
-from zentra_api.cli.constants import PYTHON_VERSION, pypi_url
 
 
 class Description(BaseModel):

@@ -1,6 +1,6 @@
 from pydantic import BaseModel, ConfigDict
 
-from .enums import TokenType
+from zentra_api.enums import TokenType
 
 
 class Token(BaseModel):

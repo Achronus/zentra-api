@@ -3,9 +3,9 @@ from typing import Any, Generic, TypeVar
 from fastapi import HTTPException
 from fastapi.responses import JSONResponse
 
-from .base import BaseResponse, BaseSuccessResponse
-from .messages import HTTP_MSG_MAPPING, HTTPMessage
-from .utils import build_response, get_code_status, merge_dicts_list
+from zentra_api.responses.base import BaseResponse, BaseSuccessResponse
+from zentra_api.responses.messages import HTTP_MSG_MAPPING, HTTPMessage
+from zentra_api.responses.utils import build_response, get_code_status, merge_dicts_list
 from zentra_api.utils.package import load_module
 
 from pydantic import (
