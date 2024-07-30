@@ -72,9 +72,11 @@ class PoetryFile(BaseModel):
     def to_dict(self) -> dict:
         return {
             "tool": {
-                "poetry": self.desc.model_dump(),
-                "scripts": self._scripts_to_dict(),
-                "dependencies": self._deps_to_dict(self.core_deps),
+                "poetry": {
+                    **self.desc.model_dump(),
+                    "scripts": self._scripts_to_dict(),
+                    "dependencies": self._deps_to_dict(self.core_deps),
+                },
                 "group": {
                     "dev": {
                         "dependencies": self._deps_to_dict(self.dev_deps),

@@ -77,14 +77,14 @@ def test_poetry_file():
                 "description": "A FastAPI backend for processing API data.",
                 "authors": ["Placeholder <placeholder@email.com>"],
                 "readme": "README.md",
-            },
-            "scripts": {
-                "run-dev": "app.run:development",
-                "run-prod": "app.run:production",
-            },
-            "dependencies": {
-                "python": "^3.12",
-                "fastapi": "^0.111",
+                "scripts": {
+                    "run-dev": "app.run:development",
+                    "run-prod": "app.run:production",
+                },
+                "dependencies": {
+                    "python": "^3.12",
+                    "fastapi": "^0.111",
+                },
             },
             "group": {
                 "dev": {
@@ -130,14 +130,14 @@ class TestPoetryFileBuilder:
                     "description": "A FastAPI backend for processing API data.",
                     "authors": ["Placeholder <placeholder@email.com>"],
                     "readme": "README.md",
-                },
-                "scripts": {
-                    "run-dev": "app.run:development",
-                    "run-prod": "app.run:production",
-                },
-                "dependencies": {
-                    "python": "^3.12",
-                    "flask": "^1.2",
+                    "scripts": {
+                        "run-dev": "app.run:development",
+                        "run-prod": "app.run:production",
+                    },
+                    "dependencies": {
+                        "python": "^3.12",
+                        "flask": "^1.2",
+                    },
                 },
                 "group": {
                     "dev": {
