@@ -17,24 +17,24 @@ class SQLConfig(BaseModel):
 
     Parameters:
     - `db_url` - (`sqlalchemy.URL | string`) - the SQL database URL
-    - `sql_engine` (`sqlalchemy.Engine | None, optional`) - a custom SQLAlchemy engine instance created using `create_engine()`. When `None`, creates one automatically. `None` by default
-    - `sql_session` (`sqlalchemy.sessionmaker | None, optional`) - a custom SQLAlchemy session instance created using `sessionmaker`. When `None`, creates one automatically -> `sessionmaker(autocommit=False, autoflush=False, bind=engine)`. `None` by default
-    - `sql_base` (`sqlalchemy.orm.DeclarativeBase | None`) - a custom SQLAlchemy Base instance created using `declarative_base()`. When `None` creates one automatically -> `declarative_base()`. `None` by default
+    - `engine` (`sqlalchemy.Engine | None, optional`) - a custom SQLAlchemy engine instance created using `create_engine()`. When `None`, creates one automatically. `None` by default
+    - `SessionLocal` (`sqlalchemy.sessionmaker | None, optional`) - a custom SQLAlchemy session instance created using `sessionmaker`. When `None`, creates one automatically -> `sessionmaker(autocommit=False, autoflush=False, bind=engine)`. `None` by default
+    - `Base` (`sqlalchemy.orm.DeclarativeBase | None`) - a custom SQLAlchemy Base instance created using `declarative_base()`. When `None` creates one automatically -> `declarative_base()`. `None` by default
     """
 
     db_url: URL | str = Field(
         ...,
         description="The SQL database URL.",
     )
-    sql_engine: Engine | None = Field(
+    engine: Engine | None = Field(
         None,
         description="A SQLAlchemy engine instance created using `create_engine()`.",
     )
-    sql_session: sessionmaker | None = Field(
+    SessionLocal: sessionmaker | None = Field(
         None,
         description="a custom SQLAlchemy session instance created using `sessionmaker`.",
     )
-    sql_base: DeclarativeMeta | None = Field(
+    Base: DeclarativeMeta | None = Field(
         None,
         description="a custom SQLAlchemy Base instance created using `declarative_base()`.",
     )
@@ -55,11 +55,15 @@ class SQLConfig(BaseModel):
 
         return db_url
 
-    @property
-    def engine(self) -> Engine:
-        """The SQLAlchemy engine."""
-        if self.sql_engine:
-            return self.sql_engine
+    def model_post_init(self, __context):
+        self.engine = self._set_engine(self.engine)
+        self.SessionLocal = self._set_session_local(self.SessionLocal)
+        self.Base = self._set_base(self.Base)
+
+    def _set_engine(self, engine: Engine | None) -> Engine:
+        """A helper method for creating the SQL `engine`."""
+        if engine:
+            return engine
 
         if self.db_url.drivername.startswith("sqlite"):
             return create_engine(
@@ -69,18 +73,16 @@ class SQLConfig(BaseModel):
 
         return create_engine(self.db_url)
 
-    @property
-    def SessionLocal(self) -> sessionmaker:
-        """The SQLAlchemy local session."""
-        if self.sql_session:
-            return self.sql_session
+    def _set_session_local(self, SessionLocal: sessionmaker | None) -> sessionmaker:
+        """A helper method for setting the SQL session."""
+        if SessionLocal:
+            return SessionLocal
 
         return sessionmaker(autocommit=False, autoflush=False, bind=self.engine)
 
-    @property
-    def Base(self) -> DeclarativeMeta:
-        """The SQLAlchemy `declarative_base()` instance."""
-        return self.sql_base if self.sql_base else declarative_base()
+    def _set_base(cls, Base: DeclarativeMeta | None) -> DeclarativeMeta:
+        """A helper method for setting the SQl declarative base."""
+        return Base if Base else declarative_base()
 
     def create_all(self) -> None:
         """Creates all the database tables in the `Base` instance."""
@@ -108,10 +110,15 @@ class AuthConfig(BaseModel):
     )
 
     _secret_key = PrivateAttr(default=None)
+    _pwd_context = PrivateAttr(default=None)
+    _oauth2_scheme = PrivateAttr(default=None)
+
     model_config = ConfigDict(use_enum_values=True)
 
     def model_post_init(self, __context):
         self._secret_key = generate_secret_key(JWTSize[self.ALGORITHM])
+        self._pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
+        self._oauth2_scheme = OAuth2PasswordBearer(tokenUrl="auth/token")
 
     @property
     def SECRET_KEY(self) -> str:
@@ -120,12 +127,12 @@ class AuthConfig(BaseModel):
     @property
     def pwd_context(self) -> CryptContext:
         """The authentication password context."""
-        return CryptContext(schemes=["bcrypt"], deprecated="auto")
+        return self._pwd_context
 
     @property
     def oauth2_scheme(self) -> OAuth2PasswordBearer:
         """The OAUTH2 dependency flow. Uses authentication using a bearer token obtained with a password with `tokenUrl="auth/token"`."""
-        return OAuth2PasswordBearer(tokenUrl="auth/token")
+        return self._oauth2_scheme
 
 
 class Settings(BaseModel):

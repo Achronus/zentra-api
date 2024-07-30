@@ -2,7 +2,7 @@ import pytest
 import os
 
 from sqlalchemy import Engine, create_engine, make_url
-from sqlalchemy.orm import sessionmaker, DeclarativeMeta
+from sqlalchemy.orm import sessionmaker, DeclarativeMeta, declarative_base
 
 from fastapi.security import OAuth2PasswordBearer
 from pydantic import ValidationError
@@ -52,16 +52,27 @@ class TestSQLConfig:
     @staticmethod
     def test_custom_engine():
         url = "postgresql://user:password@postgresserver/db"
-        config = SQLConfig(db_url=url, sql_engine=create_engine(url))
+        engine = create_engine(url)
+        config = SQLConfig(db_url=url, engine=engine)
         assert isinstance(config.engine, Engine)
+        assert engine == config.engine
 
     @staticmethod
     def test_custom_sessionmaker():
         url = "postgresql://user:password@postgresserver/db"
         engine = create_engine(url)
         session = sessionmaker(autocommit=False, autoflush=False, bind=engine)
-        config = SQLConfig(db_url=url, sql_engine=engine, sql_session=session)
+        config = SQLConfig(db_url=url, engine=engine, SessionLocal=session)
         assert isinstance(config.SessionLocal, sessionmaker)
+        assert session == config.SessionLocal
+
+    @staticmethod
+    def test_custom_base():
+        url = "postgresql://user:password@postgresserver/db"
+        Base = declarative_base()
+        config = SQLConfig(db_url=url, Base=Base)
+        assert isinstance(config.Base, DeclarativeMeta)
+        assert Base == config.Base
 
 
 class TestAuthConfig:
