@@ -17,7 +17,7 @@ async def lifespan(app: FastAPI):
 app = FastAPI(docs_url="/api/docs", redoc_url=None, lifespan=lifespan)
 
 
-app.include_router(auth.router)
+app.include_router(auth.router, prefix="/api")
 
 origins = [
     "http://localhost:3000",
