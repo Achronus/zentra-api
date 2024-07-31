@@ -97,6 +97,7 @@ class AuthConfig(BaseModel):
     - `ALGORITHM` (`zentra_api.auth.enums.JWTAlgorithm, optional`) - the encryption algorithm for the OAUTH2 token and secret key. `HS512` by default
     - `ACCESS_TOKEN_EXPIRE_MINS` (`integer, optional`) - the expire length for access tokens in minutes. Must be a minimum of `15`. `30` by default
     - `ROUNDS` (`integer, optional`) - the the computational cost factor for bcrypt hashing. `12` by default
+    - `TOKEN_URL` (`string, optional`) - the URL for the `oauth2_scheme` where `OAUTH2PasswordBearer(tokenUrl=<TOKEN_URL>)`. `auth/token` by default
     """
 
     SECRET_KEY: str = Field(
@@ -115,6 +116,10 @@ class AuthConfig(BaseModel):
     ROUNDS: int = Field(
         default=12, description="the the computational cost factor for bcrypt hashing."
     )
+    TOKEN_URL: str = Field(
+        default="auth/token",
+        description="The `tokenUrl` for the `oauth2_scheme` (`OAUTH2PasswordBearer`).",
+    )
 
     _pwd_context = PrivateAttr(default=None)
     _oauth2_scheme = PrivateAttr(default=None)
@@ -123,7 +128,7 @@ class AuthConfig(BaseModel):
 
     def model_post_init(self, __context):
         self._pwd_context = BcryptContext(rounds=self.ROUNDS)
-        self._oauth2_scheme = OAuth2PasswordBearer(tokenUrl="auth/token")
+        self._oauth2_scheme = OAuth2PasswordBearer(tokenUrl=self.TOKEN_URL)
 
     @property
     def pwd_context(self) -> BcryptContext:
@@ -132,7 +137,7 @@ class AuthConfig(BaseModel):
 
     @property
     def oauth2_scheme(self) -> OAuth2PasswordBearer:
-        """The OAUTH2 dependency flow. Uses authentication using a bearer token obtained with a password with `tokenUrl="auth/token"`."""
+        """The OAUTH2 dependency flow. Uses authentication using a bearer token obtained with a password with from `TOKEN_URL`."""
         return self._oauth2_scheme
 
 

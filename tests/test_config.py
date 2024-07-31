@@ -81,6 +81,8 @@ class TestAuthConfig:
         config = AuthConfig(SECRET_KEY="asupersecretkey")
         assert config.ALGORITHM == "HS512"
         assert config.ACCESS_TOKEN_EXPIRE_MINS == 30
+        assert config.ROUNDS == 12
+        assert config.TOKEN_URL == "auth/token"
 
     @staticmethod
     def test_secret_key():
