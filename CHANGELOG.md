@@ -2,6 +2,22 @@
 
 All notable changes to this project will be documented in this file.
 
+## [0.1.5] - 2024-07-31
+
+### 🚀 Features
+
+- *(settings)* Add `TOKEN_URL` parameter to `AuthConfig`
+
+### 🐛 Bug Fixes
+
+- *(auth)* Token authentication bug in `auth` router
+
+### 🚜 Refactor
+
+- *(auth)* Update token method name for clarity
+- *(db)* Add `DB` prefix to DB model class names for clarity
+- *(auth)* Add response models to methods
+
 ## [0.1.4] - 2024-07-31
 
 ### 🧪 Testing
