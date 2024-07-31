@@ -69,13 +69,25 @@ class TestSecurityUtils:
     @staticmethod
     def test_expiration_with_value(security_utils: SecurityUtils):
         expires_delta = timedelta(minutes=5)
+        tolerance = timedelta(seconds=2)
+        expected_expire_time = datetime.now(timezone.utc) + expires_delta
         expire_time = security_utils.expiration(expires_delta)
-        assert expire_time == datetime.now(timezone.utc) + expires_delta
+
+        assert (
+            abs((expire_time - expected_expire_time).total_seconds())
+            <= tolerance.total_seconds()
+        ), f"Expected expire time to be close to {expected_expire_time}, but got {expire_time}"
 
     @staticmethod
     def test_expiration_default(security_utils: SecurityUtils):
+        tolerance = timedelta(seconds=2)
+        expected_expire_time = datetime.now(timezone.utc) + security_utils.expire_mins()
         expire_time = security_utils.expiration()
-        assert expire_time == datetime.now(timezone.utc) + security_utils.expire_mins()
+
+        assert (
+            abs((expire_time - expected_expire_time).total_seconds())
+            <= tolerance.total_seconds()
+        ), f"Expected expire time to be close to {expected_expire_time}, but got {expire_time}"
 
     @staticmethod
     def test_encrypt(security_utils: SecurityUtils):
