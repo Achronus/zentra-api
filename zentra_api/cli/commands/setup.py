@@ -5,11 +5,13 @@ import subprocess
 from typing import Callable
 import typer
 
+from zentra_api.auth.utils import generate_secret_key
 from zentra_api.cli.builder.poetry import PoetryFileBuilder
 from zentra_api.cli.conf import ProjectDetails
 from zentra_api.cli.constants import (
     CORE_PIP_PACKAGES,
     DEV_PIP_PACKAGES,
+    ENV_FILENAME,
     SetupSuccessCodes,
     console,
 )
@@ -87,6 +89,23 @@ class SetupTasks:
         template_dir = package_path("zentra_api", ["cli", "template"])
         shutil.copytree(template_dir, self.details.project_path, dirs_exist_ok=True)
 
+    def _add_secret_key(self) -> None:
+        """Generates and adds a secret key to the `.env` file."""
+        secret_key = generate_secret_key(512)
+        env_key = "AUTH__SECRET_KEY"
+
+        env_path = Path(self.details.project_path, ENV_FILENAME)
+        with open(env_path, "r+") as f:
+            content = f.readlines()
+            f.seek(0)
+            f.truncate()
+
+            for line in content:
+                if line.startswith(env_key):
+                    f.write(f"{env_key}={secret_key}\n")
+                else:
+                    f.write(line)
+
     def get_tasks(self) -> list[Callable]:
         """Gets the tasks to run as a list of methods."""
         os.makedirs(self.details.project_path, exist_ok=True)
@@ -102,4 +121,5 @@ class SetupTasks:
         return [
             self._make_toml,
             self._move_assets,
+            self._add_secret_key,
         ]

@@ -11,6 +11,7 @@ from zentra_api.cli.conf import ProjectDetails
 from zentra_api.cli.constants import (
     CORE_PIP_PACKAGES,
     DEV_PIP_PACKAGES,
+    ENV_FILENAME,
     SetupSuccessCodes,
 )
 from zentra_api.utils.package import package_path
@@ -120,11 +121,40 @@ class TestSetupTasks:
                 dirs_exist_ok=True,
             )
 
+    def test_add_secret_key(self, setup_tasks: SetupTasks):
+        env_path = Path(setup_tasks.details.project_path, ENV_FILENAME)
+        env_path.parent.mkdir(parents=True, exist_ok=True)
+
+        setup_tasks._move_assets()
+        setup_tasks._add_secret_key()
+
+        with open(env_path, "r") as f:
+            content = f.readlines()
+
+        important_lines = all(
+            [
+                content[1].strip() == 'DB__URL="sqlite:///./dev_db.db"',
+                content[6].strip()
+                == "AUTH__ALGORITHM=HS512  # Options: HS256, HS384, or HS512",
+                content[7].strip() == "AUTH__ACCESS_TOKEN_EXPIRE_MINS=30",
+                content[8].strip() == "AUTH__ROUNDS=12",
+            ]
+        )
+
+        checks = [
+            important_lines,
+            "AUTH__SECRET_KEY" in "\n".join(content),
+            len(content[5].lstrip("AUTH__SECRET_KEY=")) == 512 // 8,
+        ]
+
+        assert all(checks), content
+
     def test_get_tasks(self, setup_tasks: SetupTasks):
         tasks = setup_tasks.get_tasks()
 
-        assert len(tasks) == 2
+        assert len(tasks) == 3
         assert tasks == [
             setup_tasks._make_toml,
             setup_tasks._move_assets,
+            setup_tasks._add_secret_key,
         ]

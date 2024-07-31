@@ -26,15 +26,18 @@ def pypi_url(package: str) -> str:
     return f"https://pypi.org/pypi/{package}/json"
 
 
-# Define packages
+ENV_FILENAME = ".env.backend"
 PYTHON_VERSION = "3.12"
 
+# Define packages
 CORE_PIP_PACKAGES = [
     "fastapi",
     "sqlalchemy",
     "alembic",
     "pydantic-settings",
-    # "zentra_api",
+    "pyjwt",
+    "bcrypt",
+    "zentra_api",
 ]
 
 DEV_PIP_PACKAGES = [
