@@ -5,7 +5,7 @@ import uvicorn
 
 
 def development(port: int = 8080) -> None:
-    subprocess.run(["fastapi", "dev", "app/main.py", "--port", port])
+    subprocess.run(["fastapi", "dev", "app/main.py", "--port", str(port)])
 
 
 def production(host: str = "0.0.0.0", port: int = 8000) -> None:
