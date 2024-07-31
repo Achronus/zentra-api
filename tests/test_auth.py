@@ -113,13 +113,13 @@ class TestSecurityUtils:
     def test_get_token_data(security_utils: SecurityUtils):
         data = {"sub": "testuser"}
         token = security_utils.create_access_token(data)
-        token_data = security_utils.get_token_data(token)
+        token_data = security_utils.verify_token(token)
         assert token_data == "testuser"
 
     @staticmethod
     def test_get_token_data_invalid_token(security_utils: SecurityUtils):
         with pytest.raises(HTTPException):
-            security_utils.get_token_data("invalidtoken")
+            security_utils.verify_token("invalidtoken")
 
     @staticmethod
     def test_empty_token_data(security_utils: SecurityUtils):
@@ -127,4 +127,4 @@ class TestSecurityUtils:
         token = security_utils.create_access_token(data)
 
         with pytest.raises(HTTPException):
-            security_utils.get_token_data(token)
+            security_utils.verify_token(token)

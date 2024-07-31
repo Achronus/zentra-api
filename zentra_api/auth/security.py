@@ -68,7 +68,7 @@ class SecurityUtils(BaseModel):
         )
         return encoded_jwt
 
-    def get_token_data(self, token: str) -> str:
+    def verify_token(self, token: str) -> str:
         """Extracts the payload data from the given token and returns it."""
         try:
             payload: dict = jwt.decode(
