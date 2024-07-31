@@ -6,6 +6,23 @@ authors = ["Ryan Partridge <rpartridge101@gmail.com>"]
 license = "MIT License"
 readme = "README.md"
 repository = "https://github.com/Achronus/zentra-api"
+# homepage = "https://zentra.achronus.dev/"
+# documentation = "https://zentra.achronus.dev/"
+
+# https://pypi.org/classifiers/
+classifiers = [
+    "Development Status :: 3 - Alpha",
+    "Framework :: FastAPI",
+    "Programming Language :: Python",
+    "Environment :: Console",
+    "Intended Audience :: Developers",
+    "Topic :: Software Development :: Libraries :: Application Frameworks",
+    "License :: OSI Approved :: MIT License",
+    "Natural Language :: English",
+]
+
+[tool.poetry.urls]
+issues = "https://github.com/Achronus/zentra-api/issues"
 
 [tool.poetry.scripts]
 zentra-api = "zentra_api.cli.main:app"
@@ -21,13 +38,16 @@ passlib = { extras = ["bcrypt"], version = "^1.7.4" }
 sqlalchemy = "^2.0.31"
 pyjwt = { extras = ["crypto"], version = "^2.8.0" }
 pydantic-settings = "^2.3.4"
-psycopg2 = "^2.9.9"
 
 [tool.poetry.group.dev.dependencies]
 pytest = "^8.2"
 responses = "^0.25.3"
-hypothesis = "^6.105"
 pytest-cov = "^4.1"
+git-cliff = "^2.4.0"
+psycopg2 = "^2.9.9"
+
+[tool.poetry.group.ci.dependencies]
+git-cliff = "^2.4.0"
 
 [build-system]
 requires = ["poetry-core"]
