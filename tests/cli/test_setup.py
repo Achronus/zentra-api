@@ -144,7 +144,7 @@ class TestSetupTasks:
         checks = [
             important_lines,
             "AUTH__SECRET_KEY" in "\n".join(content),
-            len(content[5].lstrip("AUTH__SECRET_KEY=")) == 512 // 8,
+            len(content[5].lstrip("AUTH__SECRET_KEY=").strip()) == 512 // 8,
         ]
 
         assert all(checks), content
