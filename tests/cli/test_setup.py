@@ -141,13 +141,15 @@ class TestSetupTasks:
             ]
         )
 
+        key_name = "AUTH__SECRET_KEY="
+        secret_key = content[5][len(key_name) :].strip()
         checks = [
             important_lines,
-            "AUTH__SECRET_KEY" in "\n".join(content),
-            len(content[5].lstrip("AUTH__SECRET_KEY=").strip()) == 512 // 8,
+            key_name in "\n".join(content),
+            len(secret_key) == 512 // 8,
         ]
 
-        assert all(checks), content
+        assert all(checks), (secret_key, len(secret_key))
 
     def test_get_tasks(self, setup_tasks: SetupTasks):
         tasks = setup_tasks.get_tasks()
