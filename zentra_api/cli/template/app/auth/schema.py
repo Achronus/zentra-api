@@ -10,10 +10,15 @@ class CreateUser(UserBase):
     is_active: bool = True
 
 
-class GetUser(UserBase):
+class UserDetails(BaseModel):
     email: str | None = None
+    phone: str | None = None
     full_name: str | None = None
-    is_active: bool | None = None
+    is_active: bool
+
+
+class GetUser(UserBase, UserDetails):
+    pass
 
 
 class UserInDB(GetUser):
