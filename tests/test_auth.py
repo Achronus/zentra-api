@@ -51,7 +51,7 @@ class TestGenerateJWTSecretKey:
 class TestSecurityUtils:
     @pytest.fixture
     def security_utils(self) -> SecurityUtils:
-        return SecurityUtils(auth=AuthConfig())
+        return SecurityUtils(auth=AuthConfig(SECRET_KEY="asupersecretkey"))
 
     @staticmethod
     def test_hash_password(security_utils: SecurityUtils):

@@ -6,8 +6,8 @@ from sqlalchemy.orm import sessionmaker, DeclarativeMeta, declarative_base
 
 from fastapi.security import OAuth2PasswordBearer
 from pydantic import ValidationError
-from passlib.context import CryptContext
 
+from zentra_api.auth.context import BcryptContext
 from zentra_api.config import SQLConfig, AuthConfig, Settings
 from zentra_api.config.env import finder, load_dotenv_file
 
@@ -78,13 +78,13 @@ class TestSQLConfig:
 class TestAuthConfig:
     @staticmethod
     def test_default_values():
-        config = AuthConfig()
+        config = AuthConfig(SECRET_KEY="asupersecretkey")
         assert config.ALGORITHM == "HS512"
         assert config.ACCESS_TOKEN_EXPIRE_MINS == 30
 
     @staticmethod
     def test_secret_key():
-        config = AuthConfig()
+        config = AuthConfig(SECRET_KEY="asupersecretkey")
         secret_key = config.SECRET_KEY
         assert isinstance(secret_key, str)
         assert len(secret_key) > 0
@@ -92,27 +92,37 @@ class TestAuthConfig:
     @staticmethod
     def test_min_length_validation():
         with pytest.raises(ValidationError):
-            AuthConfig(ACCESS_TOKEN_EXPIRE_MINS=10)
+            AuthConfig(SECRET_KEY="asupersecretkey", ACCESS_TOKEN_EXPIRE_MINS=10)
 
 
 class TestSettings:
     @staticmethod
     def test_init(valid_sql_url: str):
         sql_config = SQLConfig(db_url=valid_sql_url)
-        settings = Settings(SQL=sql_config)
+        settings = Settings(
+            SQL=sql_config,
+            AUTH=AuthConfig(SECRET_KEY="asupersecretkey"),
+        )
         assert settings.SQL == sql_config
         assert isinstance(settings.AUTH, AuthConfig)
+        assert settings.AUTH.SECRET_KEY == "asupersecretkey"
 
     @staticmethod
     def test_pwd_context(valid_sql_url: str):
         sql_config = SQLConfig(db_url=valid_sql_url)
-        settings = Settings(SQL=sql_config)
-        assert isinstance(settings.AUTH.pwd_context, CryptContext)
+        settings = Settings(
+            SQL=sql_config,
+            AUTH=AuthConfig(SECRET_KEY="asupersecretkey"),
+        )
+        assert isinstance(settings.AUTH.pwd_context, BcryptContext)
 
     @staticmethod
     def test_oauth2_scheme(valid_sql_url: str):
         sql_config = SQLConfig(db_url=valid_sql_url)
-        settings = Settings(SQL=sql_config)
+        settings = Settings(
+            SQL=sql_config,
+            AUTH=AuthConfig(SECRET_KEY="asupersecretkey"),
+        )
         assert isinstance(settings.AUTH.oauth2_scheme, OAuth2PasswordBearer)
 
 

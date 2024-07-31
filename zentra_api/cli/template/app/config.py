@@ -1,7 +1,7 @@
 from typing import Annotated
 
 from zentra_api.auth.security import SecurityUtils
-from zentra_api.config import SQLConfig, Settings
+from zentra_api.config import AuthConfig, SQLConfig, Settings
 from zentra_api.config.env import load_dotenv_file
 
 from fastapi import Depends
@@ -25,6 +25,7 @@ class EnvVariables(BaseSettings):
     """A settings class for extracting the environment variables from the `.env.backend` file."""
 
     DB: DatabaseConfig
+    AUTH: AuthConfig
 
     model_config = SettingsConfigDict(
         env_file=".env.backend", env_nested_delimiter="__"
@@ -32,7 +33,10 @@ class EnvVariables(BaseSettings):
 
 
 env_vars = EnvVariables()
-SETTINGS = Settings(SQL=SQLConfig(db_url=env_vars.DB.URL))
+SETTINGS = Settings(
+    SQL=SQLConfig(db_url=env_vars.DB.URL),
+    AUTH=env_vars.AUTH,
+)
 
 
 def get_db():

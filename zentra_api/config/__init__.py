@@ -1,11 +1,10 @@
-from zentra_api.auth.enums import JWTAlgorithm, JWTSize
-from zentra_api.auth.utils import generate_secret_key
+from zentra_api.auth.enums import JWTAlgorithm
+from zentra_api.auth.context import BcryptContext
 
 from sqlalchemy import URL, Engine, create_engine, make_url
 from sqlalchemy.orm import sessionmaker, declarative_base, DeclarativeMeta
 from sqlalchemy.exc import ArgumentError
 
-from passlib.context import CryptContext
 from fastapi.security import OAuth2PasswordBearer
 from pydantic import BaseModel, Field, PrivateAttr, field_validator, ConfigDict
 from pydantic_core import PydanticCustomError
@@ -94,10 +93,15 @@ class AuthConfig(BaseModel):
     A storage container for authentication settings. Automatically creates tokens and secret keys using the given algorithm.
 
     Parameters:
+    - `SECRET_KEY` (`string`) - the key for signing JSON Web Tokens (JWT)
     - `ALGORITHM` (`zentra_api.auth.enums.JWTAlgorithm, optional`) - the encryption algorithm for the OAUTH2 token and secret key. `HS512` by default
     - `ACCESS_TOKEN_EXPIRE_MINS` (`integer, optional`) - the expire length for access tokens in minutes. Must be a minimum of `15`. `30` by default
+    - `ROUNDS` (`integer, optional`) - the the computational cost factor for bcrypt hashing. `12` by default
     """
 
+    SECRET_KEY: str = Field(
+        ..., description="the key for signing JSON Web Tokens (JWT)"
+    )
     ALGORITHM: JWTAlgorithm = Field(
         default=JWTAlgorithm.HS512,
         description="The encryption algorithm for the OAUTH2 token and secret key.",
@@ -108,24 +112,21 @@ class AuthConfig(BaseModel):
         ge=15,
         description="The expire length for the access token in minutes.",
     )
+    ROUNDS: int = Field(
+        default=12, description="the the computational cost factor for bcrypt hashing."
+    )
 
-    _secret_key = PrivateAttr(default=None)
     _pwd_context = PrivateAttr(default=None)
     _oauth2_scheme = PrivateAttr(default=None)
 
     model_config = ConfigDict(use_enum_values=True)
 
     def model_post_init(self, __context):
-        self._secret_key = generate_secret_key(JWTSize[self.ALGORITHM])
-        self._pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
+        self._pwd_context = BcryptContext(rounds=self.ROUNDS)
         self._oauth2_scheme = OAuth2PasswordBearer(tokenUrl="auth/token")
 
     @property
-    def SECRET_KEY(self) -> str:
-        return self._secret_key
-
-    @property
-    def pwd_context(self) -> CryptContext:
+    def pwd_context(self) -> BcryptContext:
         """The authentication password context."""
         return self._pwd_context
 
@@ -141,10 +142,10 @@ class Settings(BaseModel):
 
     Parameters:
     - `SQL` (`zentra_api.config.SQLConfig`) - a ZentraAPI `SQLConfig` model containing a database URL
-    - `AUTH` (`zentra_api.config.AuthConfig, optional`) - an optional ZentraAPI `AuthConfig` model with custom configuration settings. Otherwise, created automatically
+    - `AUTH` (`zentra_api.config.AuthConfig`) - a ZentraAPI `AuthConfig` model with authentication configuration settings
     """
 
     SQL: SQLConfig
-    AUTH: AuthConfig = AuthConfig()
+    AUTH: AuthConfig
 
     model_config = ConfigDict(use_enum_values=True)
