@@ -1,5 +1,12 @@
 # Zentra API
 
+[![codecov](https://codecov.io/github/Achronus/zentra-api/graph/badge.svg?token=Y2G1RM4WFO)](https://codecov.io/github/Achronus/zentra-api)
+![Python Version](https://img.shields.io/pypi/pyversions/zentra-api)
+![License](https://img.shields.io/github/license/Achronus/zentra-api)
+![Issues](https://img.shields.io/github/issues/Achronus/zentra-api)
+![Last Commit](https://img.shields.io/github/last-commit/Achronus/zentra-api)
+
+
 🚧 _Under construction_ 🚧
 
 A CLI tool for building [FastAPI](https://fastapi.tiangolo.com/) projects faster.
