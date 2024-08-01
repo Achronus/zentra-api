@@ -18,7 +18,7 @@ from sqlalchemy.orm import Session
 
 from zentra_api.schema import Token
 from zentra_api.responses import SuccessMsgResponse, get_response_models
-from zentra_api.responses.exc import CREDENTIALS_EXCEPTION, USER_EXCEPTION
+from zentra_api.responses.exc import USER_EXCEPTION
 
 
 router = APIRouter(prefix="/auth", tags=["Authentication"])
@@ -41,11 +41,8 @@ async def get_current_user(token: oauth2_dependency, db: db_dependency) -> GetUs
     """Gets the current user based on the given token."""
     username = security.verify_token(token)
 
-    user: DBUser | None = CONNECT.user.get_by_username(db, username)
+    user: DBUser = CONNECT.user.get_by_username(db, username)
     details: DBUserDetails = CONNECT.user_details.get(db, user.id)
-
-    if user is None:
-        raise CREDENTIALS_EXCEPTION
 
     return GetUser(
         username=user.username,
@@ -66,7 +63,7 @@ async def get_current_active_user(
 @router.get(
     "/users/me",
     status_code=status.HTTP_200_OK,
-    responses=get_response_models(401),
+    responses=get_response_models([400, 401]),
     response_model=GetUserDetailsResponse,
 )
 async def get_user(current_user: Annotated[GetUser, Depends(get_current_active_user)]):
