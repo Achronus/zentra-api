@@ -85,13 +85,13 @@ def test_poetry_file():
                     "python": "^3.12",
                     "fastapi": "^0.111",
                 },
-            },
-            "group": {
-                "dev": {
-                    "dependencies": {
-                        "pytest": "^2.0",
-                    },
-                }
+                "group": {
+                    "dev": {
+                        "dependencies": {
+                            "pytest": "^2.0",
+                        },
+                    }
+                },
             },
         },
         "build-system": {
@@ -138,13 +138,13 @@ class TestPoetryFileBuilder:
                         "python": "^3.12",
                         "flask": "^1.2",
                     },
-                },
-                "group": {
-                    "dev": {
-                        "dependencies": {
-                            "pytest": "^2.3",
-                        },
-                    }
+                    "group": {
+                        "dev": {
+                            "dependencies": {
+                                "pytest": "^2.3",
+                            },
+                        }
+                    },
                 },
             },
             "build-system": {
