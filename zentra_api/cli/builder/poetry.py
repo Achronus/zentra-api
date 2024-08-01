@@ -76,11 +76,11 @@ class PoetryFile(BaseModel):
                     **self.desc.model_dump(),
                     "scripts": self._scripts_to_dict(),
                     "dependencies": self._deps_to_dict(self.core_deps),
-                },
-                "group": {
-                    "dev": {
-                        "dependencies": self._deps_to_dict(self.dev_deps),
-                    }
+                    "group": {
+                        "dev": {
+                            "dependencies": self._deps_to_dict(self.dev_deps),
+                        }
+                    },
                 },
             },
             "build-system": self.build_system,

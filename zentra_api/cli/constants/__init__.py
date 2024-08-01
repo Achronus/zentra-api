@@ -42,6 +42,7 @@ CORE_PIP_PACKAGES = [
 
 DEV_PIP_PACKAGES = [
     "pytest",
+    "pytest-cov",
 ]
 
 
