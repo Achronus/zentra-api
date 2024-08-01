@@ -3,7 +3,7 @@ from typing import Annotated
 
 from app.auth.response import CreateUserResponse, GetUserDetailsResponse
 from app.auth.schema import CreateUser, GetUser, UserBase
-from app.conf import (
+from app.config import (
     db_dependency,
     oauth2_dependency,
     oauth2_form_dependency,
