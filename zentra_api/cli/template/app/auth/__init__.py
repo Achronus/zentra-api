@@ -94,7 +94,7 @@ async def register_user(user: CreateUser, db: db_dependency):
     "/token",
     status_code=status.HTTP_202_ACCEPTED,
     responses=get_response_models(401),
-    response_model=LoginTokenResponse,
+    response_model=Token,
 )
 async def login_for_access_token(form_data: oauth2_form_dependency, db: db_dependency):
     user = authenticate_user(db, form_data.username, form_data.password)
@@ -103,11 +103,7 @@ async def login_for_access_token(form_data: oauth2_form_dependency, db: db_depen
         raise USER_EXCEPTION
 
     access_token = security.create_access_token({"sub": user.username})
-    return LoginTokenResponse(
-        code=status.HTTP_202_ACCEPTED,
-        data=Token(access_token=access_token, token_type="bearer"),
-        headers={"WWW-Authenticate": "Bearer"},
-    )
+    return Token(access_token=access_token, token_type="bearer")
 
 
 @router.post(
