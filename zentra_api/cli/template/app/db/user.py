@@ -1,9 +1,6 @@
-"""Contains all SQL database models and CRUD connections."""
-
 from sqlalchemy import Boolean, Column, ForeignKey, Integer, String
 
-from .config import SETTINGS
-from zentra_api.crud import CRUD, UserCRUD
+from app.config import SETTINGS
 
 
 class DBUser(SETTINGS.SQL.Base):
@@ -27,17 +24,3 @@ class DBUserDetails(SETTINGS.SQL.Base):
     email = Column(String, unique=True, default=None)
     phone = Column(String, unique=True, default=None)
     full_name = Column(String, default=None)
-
-
-SETTINGS.SQL.create_all()
-
-
-class DBConnections:
-    """A place to store all table CRUD operations."""
-
-    def __init__(self) -> None:
-        self.user = UserCRUD(model=DBUser)
-        self.user_details = CRUD(model=DBUserDetails)
-
-
-CONNECT = DBConnections()
