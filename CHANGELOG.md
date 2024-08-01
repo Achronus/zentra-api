@@ -2,6 +2,22 @@
 
 All notable changes to this project will be documented in this file.
 
+## [0.1.6] - 2024-08-01
+
+### 🐛 Bug Fixes
+
+- *(auth)* Update `token` route output to fix bug
+- *(poetry)* Fixed Poetry `dev` dependencies group assignment
+
+### 🚜 Refactor
+
+- *(db)* Moved `db` models to separate folder for scalability
+- *(auth)* Refactor route output responses for best practice
+
+### 🧪 Testing
+
+- *(auth)* Refactor time-based tests to pass
+
 ## [0.1.5] - 2024-07-31
 
 ### 🚀 Features
