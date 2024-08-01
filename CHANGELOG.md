@@ -2,6 +2,22 @@
 
 All notable changes to this project will be documented in this file.
 
+## [0.1.7] - 2024-08-01
+
+### 🐛 Bug Fixes
+
+- *(auth)* Fix broken `config` import in templates
+
+### 🚜 Refactor
+
+- *(template)* Removed redundant code
+
+### 🧪 Testing
+
+- *(poetry)* Refactor poetry file builder tests to pass
+- *(coverage)* Added coverage settings with omits for API tested files
+- *(template)* Added `init` project tests (99% coverage) for quickstart
+
 ## [0.1.6] - 2024-08-01
 
 ### 🐛 Bug Fixes
