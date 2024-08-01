@@ -1,22 +1,23 @@
 from typing import Annotated
 
 
-from app.auth.response import CreateUserResponse, LoginTokenResponse
+from app.auth.response import CreateUserResponse, GetUserDetailsResponse
 from app.auth.schema import CreateUser, GetUser, UserBase
-from app.config import (
+from app.conf import (
     db_dependency,
     oauth2_dependency,
     oauth2_form_dependency,
     security,
 )
-from app.models import CONNECT, DBUser, DBUserDetails
+from app.db import CONNECT
+from app.db.user import DBUser, DBUserDetails
 
 from fastapi import APIRouter, Depends, HTTPException, status
 
 from sqlalchemy.orm import Session
 
 from zentra_api.schema import Token
-from zentra_api.responses import get_response_models
+from zentra_api.responses import SuccessMsgResponse, get_response_models
 from zentra_api.responses.exc import CREDENTIALS_EXCEPTION, USER_EXCEPTION
 
 
@@ -46,7 +47,11 @@ async def get_current_user(token: oauth2_dependency, db: db_dependency) -> GetUs
     if user is None:
         raise CREDENTIALS_EXCEPTION
 
-    return GetUser(username=user.username, **details)
+    return GetUser(
+        username=user.username,
+        is_active=user.is_active,
+        **details.__dict__,
+    )
 
 
 async def get_current_active_user(
@@ -62,10 +67,14 @@ async def get_current_active_user(
     "/users/me",
     status_code=status.HTTP_200_OK,
     responses=get_response_models(401),
-    response_model=GetUser,
+    response_model=GetUserDetailsResponse,
 )
 async def get_user(current_user: Annotated[GetUser, Depends(get_current_active_user)]):
-    return current_user
+    return GetUserDetailsResponse(
+        code=status.HTTP_200_OK,
+        data=current_user.model_dump(),
+        headers={"WWW-Authenticate": "Bearer"},
+    )
 
 
 @router.post(
@@ -87,7 +96,11 @@ async def register_user(user: CreateUser, db: db_dependency):
     CONNECT.user_details.create(db, data={"user_id": created_user.id})
     user_data = UserBase(username=created_user.username)
 
-    return CreateUserResponse(code=status.HTTP_201_CREATED, data=user_data)
+    return CreateUserResponse(
+        code=status.HTTP_201_CREATED,
+        data=user_data,
+        headers={"WWW-Authenticate": "Bearer"},
+    )
 
 
 @router.post(
@@ -110,7 +123,12 @@ async def login_for_access_token(form_data: oauth2_form_dependency, db: db_depen
     "/verify-token/{token}",
     status_code=status.HTTP_200_OK,
     responses=get_response_models(401),
+    response_model=SuccessMsgResponse,
 )
 async def verify_user_token(token: oauth2_dependency):
     security.verify_token(token)
-    return {"message": "Token is valid"}
+    return SuccessMsgResponse(
+        code=status.HTTP_200_OK,
+        message="Token is valid.",
+        headers={"WWW-Authenticate": "Bearer"},
+    )

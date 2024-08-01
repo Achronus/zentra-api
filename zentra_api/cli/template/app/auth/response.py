@@ -1,7 +1,6 @@
-from app.auth.schema import UserBase
+from app.auth.schema import UserBase, GetUser
 
 from zentra_api.responses import SuccessResponse
-from zentra_api.schema import Token
 
 
 class CreateUserResponse(SuccessResponse[UserBase]):
@@ -10,7 +9,7 @@ class CreateUserResponse(SuccessResponse[UserBase]):
     pass
 
 
-class LoginTokenResponse(SuccessResponse[Token]):
-    """A response for getting the login token."""
+class GetUserDetailsResponse(SuccessResponse[GetUser]):
+    """A response for getting the user details."""
 
     pass

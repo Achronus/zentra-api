@@ -40,6 +40,16 @@ class ErrorResponse(MessageResponse):
     )
 
 
+class SuccessMsgResponse(MessageResponse):
+    """A success response model. Intended for client responses. Provides a message instead of data."""
+
+    status: str = Field(
+        default="success",
+        frozen=True,
+        description="The status of the response. Cannot be changed.",
+    )
+
+
 class SuccessResponse(BaseSuccessResponse, Generic[T]):
     """A success response model. Intended for client responses. Uses generics to change the data model."""
 
