@@ -13,11 +13,13 @@ A CLI tool for building [FastAPI](https://fastapi.tiangolo.com/) projects faster
 
 Read more about the Zentra stack on [GitHub](https://github.com/Achronus/zentra).
 
-To get started, install the package with:
+To get started, install the package with [Poetry](https://python-poetry.org/):
 
 ```bash
-pip install zentra_api
+pip install zentra_api poetry
 ```
+
+We use Poetry for managing our project packages and using custom commands.
 
 Then create a new project with:
 
