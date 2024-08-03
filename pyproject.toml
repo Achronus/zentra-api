@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "zentra_api"
-version = "0.1.7"
+version = "0.1.8"
 description = "A CLI tool for building FastAPI apps faster."
 authors = ["Ryan Partridge <rpartridge101@gmail.com>"]
 license = "MIT License"
