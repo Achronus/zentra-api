@@ -2,6 +2,16 @@
 
 All notable changes to this project will be documented in this file.
 
+## [0.1.8] - 2024-08-03
+
+### 🚜 Refactor
+
+- *(auth)* Added `Field` declarations to model attributes for docs
+
+### Build
+
+- *(poetry)* Removed `Poetry` as required dependency in package
+
 ## [0.1.7] - 2024-08-01
 
 ### 🐛 Bug Fixes
