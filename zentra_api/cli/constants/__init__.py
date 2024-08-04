@@ -1,6 +1,8 @@
 from enum import Enum
 from rich.console import Console
 
+from zentra_api.utils.package import package_path
+
 
 console = Console()
 
@@ -44,6 +46,9 @@ DEV_PIP_PACKAGES = [
     "pytest",
     "pytest-cov",
 ]
+
+# Filepaths
+TEMPLATE_DIR = package_path("zentra_api", ["cli", "template", "project"])
 
 
 class SetupSuccessCodes(Enum):

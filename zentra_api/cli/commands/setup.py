@@ -8,20 +8,19 @@ import typer
 from zentra_api.auth.utils import generate_secret_key
 from zentra_api.cli.builder.poetry import PoetryFileBuilder
 from zentra_api.cli.conf import ProjectDetails
+from zentra_api.cli.conf.logger import set_loggers
 from zentra_api.cli.constants import (
     CORE_PIP_PACKAGES,
     DEV_PIP_PACKAGES,
     ENV_FILENAME,
+    TEMPLATE_DIR,
     SetupSuccessCodes,
     console,
 )
 from zentra_api.cli.constants.display import setup_complete_panel
-from zentra_api.cli.conf.logger import set_loggers
-from zentra_api.utils.package import package_path
+from zentra_api.cli.constants.message import creation_msg
 
 from rich.progress import track
-
-from zentra_api.cli.constants.message import creation_msg
 
 
 class Setup:
@@ -86,8 +85,7 @@ class SetupTasks:
 
     def _move_assets(self) -> None:
         """Moves the template assets into the project directory."""
-        template_dir = package_path("zentra_api", ["cli", "template", "project"])
-        shutil.copytree(template_dir, self.details.project_path, dirs_exist_ok=True)
+        shutil.copytree(TEMPLATE_DIR, self.details.project_path, dirs_exist_ok=True)
 
     def _add_secret_key(self) -> None:
         """Generates and adds a secret key to the `.env` file."""

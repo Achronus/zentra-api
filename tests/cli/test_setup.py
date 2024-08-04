@@ -12,9 +12,9 @@ from zentra_api.cli.constants import (
     CORE_PIP_PACKAGES,
     DEV_PIP_PACKAGES,
     ENV_FILENAME,
+    TEMPLATE_DIR,
     SetupSuccessCodes,
 )
-from zentra_api.utils.package import package_path
 
 
 class TestSetup:
@@ -116,7 +116,7 @@ class TestSetupTasks:
             setup_tasks._move_assets()
 
             mock_shutil.assert_called_once_with(
-                package_path("zentra_api", ["cli", "template"]),
+                TEMPLATE_DIR,
                 setup_tasks.details.project_path,
                 dirs_exist_ok=True,
             )
