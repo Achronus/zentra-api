@@ -8,7 +8,7 @@ def development(port: int = 8080) -> None:
     subprocess.run(["fastapi", "dev", "app/main.py", "--port", str(port)])
 
 
-def production(host: str = "0.0.0.0", port: int = 8000) -> None:
+def production(host: str = "0.0.0.0", port: int = 8080) -> None:
     uvicorn.run("app.main:app", host=host, port=port)
 
 

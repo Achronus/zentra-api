@@ -86,7 +86,7 @@ class SetupTasks:
 
     def _move_assets(self) -> None:
         """Moves the template assets into the project directory."""
-        template_dir = package_path("zentra_api", ["cli", "template"])
+        template_dir = package_path("zentra_api", ["cli", "template", "project"])
         shutil.copytree(template_dir, self.details.project_path, dirs_exist_ok=True)
 
     def _add_secret_key(self) -> None:
