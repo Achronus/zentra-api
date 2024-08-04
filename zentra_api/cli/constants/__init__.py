@@ -49,6 +49,18 @@ DEV_PIP_PACKAGES = [
 
 # Filepaths
 TEMPLATE_DIR = package_path("zentra_api", ["cli", "template", "project"])
+DEPLOYMENT_DIR = package_path("zentra_api", ["cli", "template", "deployment"])
+
+# Deployment file options
+DOCKER_FILES = [".dockerignore", "Dockerfile.backend"]
+DOCKER_COMPOSE_FILES = DOCKER_FILES + ["docker-compose.yml"]
+RAILWAY_FILES = DOCKER_FILES + ["railway.toml"]
+
+DEPLOYMENT_FILE_MAPPING = {
+    "railway": RAILWAY_FILES,
+    "dockerfile": DOCKER_FILES,
+    "docker_compose": DOCKER_COMPOSE_FILES,
+}
 
 
 class SetupSuccessCodes(Enum):

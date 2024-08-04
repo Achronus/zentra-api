@@ -11,3 +11,9 @@ class JWTSize(Enum):
     HS256 = 256
     HS384 = 384
     HS512 = 512
+
+
+class BuildType(StrEnum):
+    RAILWAY = "railway"
+    DOCKERFILE = "dockerfile"
+    DOCKER_COMPOSE = "docker_compose"

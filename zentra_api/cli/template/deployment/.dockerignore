@@ -1,0 +1,19 @@
+# Git
+**.git
+*.gitignore
+
+# Python
+**/__pycache__
+
+# Docker
+*Dockerfile.*
+*docker-compose.yml
+*.dockerignore
+
+# Dev
+**/tests
+*pytest.ini
+**/.pytest_cache
+
+# Env
+*.env

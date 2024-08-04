@@ -1,7 +1,7 @@
 from typing import Annotated
 import typer
 
-from zentra_api.auth.enums import JWTAlgorithm, JWTSize
+from zentra_api.auth.enums import BuildType, JWTAlgorithm, JWTSize
 from zentra_api.auth.utils import generate_secret_key
 from zentra_api.cli.commands.setup import Setup
 from zentra_api.cli.constants import console
@@ -78,6 +78,17 @@ def new_key(
     """Generates a new SECRET_KEY given a <ALGO>."""
     key = generate_secret_key(JWTSize[algo].value)
     print(key)
+
+
+@app.command("build")
+def build(
+    type: Annotated[
+        BuildType,
+        typer.Argument(help="The type of BUILD to generate", show_choices=True),
+    ] = BuildType.RAILWAY,
+) -> None:
+    """Creates a <TYPE> of production ready build for your project."""
+    pass
 
 
 if __name__ == "__main__":

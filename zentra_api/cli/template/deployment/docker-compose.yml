@@ -1,0 +1,23 @@
+# Run command:
+# docker-compose up -d --build
+
+# Exit command:
+# docker-compose down
+
+services:
+  backend:
+    container_name: backend
+    build:
+      context: .
+      dockerfile: Dockerfile.backend
+      args:
+        POETRY_VERSION: 1.8.3
+        HOST: 0.0.0.0
+        PORT: 80
+        PYTHON_VERSION: 3.12
+        BUILD_VERSION: 3.12.4
+        ENV_MODE: prod
+    ports:
+      - 80:8080
+    volumes:
+      - .:/.
