@@ -1,9 +1,22 @@
 import textwrap
 
-from zentra_api.cli.conf import ProjectDetails
 from zentra_api.cli.constants import MAGIC, ROOT_COMMAND
 
 from rich.panel import Panel
+
+
+def complete_msg(project_name: str) -> str:
+    return f"""
+    [cyan]Next Steps[/cyan]
+        1. Access the project with [dark_goldenrod]cd {project_name}[/dark_goldenrod]
+        2. Install its packages [yellow]poetry install[/yellow]
+
+    [dark_goldenrod]Start Building![/dark_goldenrod]
+        - Create some database tables 
+        [yellow]{ROOT_COMMAND} add-table <>[/yellow]
+        - And some routes 
+        [cyan]{ROOT_COMMAND} add-route <>[/cyan]
+    """
 
 
 def create_panel(
@@ -19,12 +32,17 @@ def create_panel(
     )
 
 
-def setup_complete_panel(details: ProjectDetails) -> Panel:
-    """Creates a printable panel after successfully completing the `init` command."""
+def success_panel(title: str, desc: str) -> Panel:
     return create_panel(f"""
-    {MAGIC} [bright_green]Project created successfully![/bright_green] {MAGIC}
+    {MAGIC} [bright_green]{title}[/bright_green] {MAGIC}
+    {desc}""")
 
-    Access it here: [dark_goldenrod][link={details.project_path}]{details.project_dir}[/link][/dark_goldenrod]
 
-    Use [yellow]{ROOT_COMMAND} add[/yellow] to create some [cyan]routes[/cyan]!
-    """)
+def setup_complete_panel(project_name: str) -> Panel:
+    """Creates a printable panel after successfully completing the `init` command."""
+    return success_panel("Project created successfully!", complete_msg(project_name))
+
+
+def already_configured_panel(project_name: str) -> Panel:
+    """Creates a printable panel for the `init` command if the project already exists."""
+    return success_panel("Project already exists!", complete_msg(project_name))

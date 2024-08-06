@@ -10,6 +10,7 @@ from zentra_api.cli.constants import (
     FAIL,
     GITHUB_ISSUES_URL,
     MAGIC,
+    ROOT_COMMAND,
     CommonErrorCodes,
     SetupSuccessCodes,
 )
@@ -27,6 +28,18 @@ MORE_HELP_INFO = f"""
   Report the issue [bright_blue][link={GITHUB_ISSUES_URL}]on GitHub[/link][/bright_blue].
 """
 
+BUILD_COMMANDS = f"""
+[dark_goldenrod]Start Building![/dark_goldenrod]
+    - Create some database tables 
+    [yellow]{ROOT_COMMAND} add-table <>[/yellow]
+    - And some routes 
+    [cyan]{ROOT_COMMAND} add-route <>[/cyan]
+"""
+
+MISSING_PROJECT = f"""
+Have you run [yellow]{ROOT_COMMAND} init[/yellow]?
+"""
+
 UNKNOWN_ERROR = f"""
 {FAIL} 🥴 Well this is awkward... We didn't account for this! 🥴 {FAIL}
 
@@ -34,14 +47,17 @@ You've encountered something unexpected 🤯. Please report this issue on [brigh
 """
 
 
-def error_msg_with_checks(title: str, checks: str) -> str:
+def error_msg_with_checks(title: str, desc: str) -> str:
     """Formats error messages that have a title and a list of checks."""
-    return textwrap.dedent(f"\n{FAIL} {title} {FAIL}\n") + checks
+    return textwrap.dedent(f"\n{FAIL} [bright_red]{title}[/bright_red] {FAIL}\n") + desc
 
 
-def success_msg_with_checks(title: str, checks: str, icon: str = MAGIC) -> str:
+def success_msg_with_checks(title: str, desc: str, icon: str = MAGIC) -> str:
     """Formats success messages that have a title and a list of checks."""
-    return textwrap.dedent(f"\n{icon} {title} {icon}\n") + checks
+    return (
+        textwrap.dedent(f"\n{icon} [bright_green]{title}[/bright_green] {icon}\n")
+        + desc
+    )
 
 
 SUCCESS_MSG_MAP = {
@@ -52,6 +68,10 @@ SUCCESS_MSG_MAP = {
 
 COMMON_ERROR_MAP = {
     CommonErrorCodes.TEST_ERROR: "Test",
+    CommonErrorCodes.PROJECT_NOT_FOUND: error_msg_with_checks(
+        "Project not found!",
+        desc=MISSING_PROJECT,
+    ),
 }
 
 

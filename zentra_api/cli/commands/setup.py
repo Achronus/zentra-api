@@ -17,7 +17,10 @@ from zentra_api.cli.constants import (
     SetupSuccessCodes,
     console,
 )
-from zentra_api.cli.constants.display import setup_complete_panel
+from zentra_api.cli.constants.display import (
+    already_configured_panel,
+    setup_complete_panel,
+)
 from zentra_api.cli.constants.message import creation_msg
 
 from rich.progress import track
@@ -44,6 +47,7 @@ class Setup:
     def build(self) -> None:
         """Builds the project."""
         if self.project_exists():
+            console.print(already_configured_panel(self.project_name))
             raise typer.Exit(code=SetupSuccessCodes.ALREADY_CONFIGURED)
 
         tasks = self.setup_tasks.get_tasks()
@@ -51,7 +55,7 @@ class Setup:
         for task in track(tasks, description="Building..."):
             task()
 
-        console.print(setup_complete_panel(self.details))
+        console.print(setup_complete_panel(self.project_name))
         raise typer.Exit(code=SetupSuccessCodes.COMPLETE)
 
 

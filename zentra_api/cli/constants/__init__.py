@@ -70,4 +70,5 @@ class SetupSuccessCodes(Enum):
 
 class CommonErrorCodes(Enum):
     TEST_ERROR = -1
+    PROJECT_NOT_FOUND = 20
     UNKNOWN_ERROR = 1000
