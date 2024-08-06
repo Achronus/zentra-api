@@ -16,12 +16,12 @@ def test_creation_msg():
 def test_error_msg_with_checks():
     result = error_msg_with_checks("test", "nice long checks")
 
-    target = f"\n{FAIL} test {FAIL}\nnice long checks"
+    target = f"\n{FAIL} [bright_red]test[/bright_red] {FAIL}\nnice long checks"
     assert result == target
 
 
 def test_success_msg_with_checks():
     result = success_msg_with_checks("test", "nice long checks", icon=PASS)
 
-    target = f"\n{PASS} test {PASS}\nnice long checks"
+    target = f"\n{PASS} [bright_green]test[/bright_green] {PASS}\nnice long checks"
     assert result == target
