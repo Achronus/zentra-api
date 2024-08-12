@@ -1,6 +1,6 @@
 from unittest.mock import patch
 import pytest
-from math import ceil
+
 
 from typer.testing import CliRunner
 
@@ -8,10 +8,6 @@ from zentra_api.cli.commands.setup import Setup
 from zentra_api.cli.main import app
 
 runner = CliRunner()
-
-
-def key_length(size: int) -> int:
-    return ceil((size // 8) * 8 / 6)
 
 
 class TestInit:
@@ -35,22 +31,16 @@ class TestInit:
 
 class TestNewKey:
     @staticmethod
-    def test_default():
+    def test_default(key_length):
         result = runner.invoke(app, ["new-key"])
 
         assert result.exit_code == 0
         assert len(result.output.strip()) == key_length(256)
 
     @staticmethod
-    @pytest.mark.parametrize(
-        "size, target_len",
-        [
-            (256 // 8, key_length(256)),
-            (384 // 8, key_length(384)),
-            (512 // 8, key_length(512)),
-        ],
-    )
-    def test_new_key_algorithms(size: int, target_len: int):
+    @pytest.mark.parametrize("size", [256 // 8, 384 // 8, 512 // 8])
+    def test_new_key_algorithms(size: int, key_length):
+        target_len = key_length(size * 8)
         result = runner.invoke(app, ["new-key", str(size)])
 
         assert result.exit_code == 0

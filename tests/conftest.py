@@ -1,7 +1,16 @@
 from pathlib import Path
 import pytest
+from math import ceil
 
 from zentra_api.utils.package import package_path
+
+
+@pytest.fixture
+def key_length() -> int:
+    def _key_length(size: int):
+        return ceil((size // 8) * 8 / 6)
+
+    return _key_length
 
 
 @pytest.fixture(scope="session", autouse=True)
