@@ -1,8 +1,9 @@
+import secrets
 from typing import Annotated
 import typer
 
-from zentra_api.auth.enums import BuildType, JWTAlgorithm, JWTSize
-from zentra_api.auth.utils import generate_secret_key
+from zentra_api.auth.enums import BuildType
+
 from zentra_api.cli.commands.setup import Setup
 from zentra_api.cli.constants import console
 from zentra_api.cli.constants.enums import AddItem, DefaultFolderOptions
@@ -70,13 +71,12 @@ def add(
 
 @app.command("new-key")
 def new_key(
-    algo: Annotated[
-        JWTAlgorithm,
-        typer.Argument(help="The type of SECRET_KEY to generate", show_choices=True),
-    ] = JWTAlgorithm.HS512,
+    size: Annotated[
+        int, typer.Argument(help="The number of bytes of randomness", min=32)
+    ] = 32,
 ) -> None:
-    """Generates a new SECRET_KEY given a <ALGO>."""
-    key = generate_secret_key(JWTSize[algo].value)
+    """Generates a new SECRET_KEY given a <SIZE>."""
+    key = secrets.token_urlsafe(size)
     print(key)
 
 

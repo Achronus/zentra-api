@@ -1,51 +1,12 @@
 from fastapi import HTTPException
 import pytest
-import string
 
 from datetime import datetime, timedelta, timezone
 from pydantic import BaseModel
 import jwt
 
-from zentra_api.config import AuthConfig
-from zentra_api.auth.enums import JWTSize
+from zentra_api.core.config import AuthConfig
 from zentra_api.auth.security import SecurityUtils
-from zentra_api.auth.utils import generate_secret_key
-
-
-class TestGenerateJWTSecretKey:
-    @staticmethod
-    def test_key_length_for_algorithms():
-        algorithms = {
-            JWTSize.HS256: 256 // 8,
-            JWTSize.HS384: 384 // 8,
-            JWTSize.HS512: 512 // 8,
-        }
-
-        for algo, expected_length in algorithms.items():
-            key = generate_secret_key(algo)
-            assert len(key) == expected_length
-
-    @staticmethod
-    def test_key_character_set():
-        valid_chars = string.ascii_letters + string.digits + "-_"
-
-        for algo in JWTSize:
-            key = generate_secret_key(algo)
-            assert all(c in valid_chars for c in key)
-
-    @staticmethod
-    def test_default_algorithm():
-        key = generate_secret_key()
-        expected_length = 256 // 8
-        assert len(key) == expected_length
-
-    @staticmethod
-    def test_invalid_algorithm():
-        invalid_algorithms = [128, 1024, "string", None]
-
-        for algo in invalid_algorithms:
-            with pytest.raises(ValueError):
-                generate_secret_key(algo)
 
 
 class TestSecurityUtils:

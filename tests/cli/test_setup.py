@@ -2,6 +2,7 @@ import pytest
 from unittest import mock
 import subprocess
 from pathlib import Path
+from math import ceil
 
 import toml
 import typer
@@ -146,7 +147,7 @@ class TestSetupTasks:
         checks = [
             important_lines,
             key_name in "\n".join(content),
-            len(secret_key) == 512 // 8,
+            len(secret_key) == ceil((256 // 8) * 8 / 6),
         ]
 
         assert all(checks), (secret_key, len(secret_key))

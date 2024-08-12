@@ -1,11 +1,11 @@
 import os
 from pathlib import Path
+import secrets
 import shutil
 import subprocess
 from typing import Callable
 import typer
 
-from zentra_api.auth.utils import generate_secret_key
 from zentra_api.cli.builder.poetry import PoetryFileBuilder
 from zentra_api.cli.conf import ProjectDetails
 from zentra_api.cli.conf.logger import set_loggers
@@ -93,7 +93,7 @@ class SetupTasks:
 
     def _add_secret_key(self) -> None:
         """Generates and adds a secret key to the `.env` file."""
-        secret_key = generate_secret_key(512)
+        secret_key = secrets.token_urlsafe(32)
         env_key = "AUTH__SECRET_KEY"
 
         env_path = Path(self.details.project_path, ENV_FILENAME)

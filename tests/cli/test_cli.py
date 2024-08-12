@@ -1,13 +1,17 @@
 from unittest.mock import patch
 import pytest
+from math import ceil
 
 from typer.testing import CliRunner
 
-from zentra_api.auth.enums import JWTAlgorithm, JWTSize
 from zentra_api.cli.commands.setup import Setup
 from zentra_api.cli.main import app
 
 runner = CliRunner()
+
+
+def key_length(size: int) -> int:
+    return ceil((size // 8) * 8 / 6)
 
 
 class TestInit:
@@ -35,19 +39,19 @@ class TestNewKey:
         result = runner.invoke(app, ["new-key"])
 
         assert result.exit_code == 0
-        assert len(result.output.strip()) == JWTSize[JWTAlgorithm.HS512].value // 8
+        assert len(result.output.strip()) == key_length(256)
 
     @staticmethod
     @pytest.mark.parametrize(
-        "algo, size",
+        "size, target_len",
         [
-            (JWTAlgorithm.HS256, 256 // 8),
-            (JWTAlgorithm.HS384, 384 // 8),
-            (JWTAlgorithm.HS512, 512 // 8),
+            (256 // 8, key_length(256)),
+            (384 // 8, key_length(384)),
+            (512 // 8, key_length(512)),
         ],
     )
-    def test_new_key_algorithms(algo: JWTAlgorithm, size: int):
-        result = runner.invoke(app, ["new-key", algo.value])
+    def test_new_key_algorithms(size: int, target_len: int):
+        result = runner.invoke(app, ["new-key", str(size)])
 
         assert result.exit_code == 0
-        assert len(result.output.strip()) == size
+        assert len(result.output.strip()) == target_len
