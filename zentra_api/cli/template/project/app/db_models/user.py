@@ -1,9 +1,9 @@
 from sqlalchemy import Boolean, Column, ForeignKey, Integer, String
 
-from app.config import SETTINGS
+from app.core.db import Base, create_tables
 
 
-class DBUser(SETTINGS.SQL.Base):
+class DBUser(Base):
     """A model of the `User` table."""
 
     __tablename__ = "users"
@@ -14,7 +14,7 @@ class DBUser(SETTINGS.SQL.Base):
     is_active = Column(Boolean, default=True)
 
 
-class DBUserDetails(SETTINGS.SQL.Base):
+class DBUserDetails(Base):
     """A model of the `UserDetails` table."""
 
     __tablename__ = "user_details"
@@ -24,3 +24,6 @@ class DBUserDetails(SETTINGS.SQL.Base):
     email = Column(String, unique=True, default=None)
     phone = Column(String, unique=True, default=None)
     full_name = Column(String, default=None)
+
+
+create_tables()
