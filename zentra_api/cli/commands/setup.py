@@ -91,22 +91,35 @@ class SetupTasks:
         """Moves the template assets into the project directory."""
         shutil.copytree(TEMPLATE_DIR, self.details.project_path, dirs_exist_ok=True)
 
-    def _add_secret_key(self) -> None:
-        """Generates and adds a secret key to the `.env` file."""
-        secret_key = secrets.token_urlsafe(32)
-        env_key = "AUTH__SECRET_KEY"
+        os.rename(
+            Path(self.details.project_path, ".env.template"),
+            Path(self.details.project_path, ENV_FILENAME),
+        )
+
+    def _update_env(self) -> None:
+        """Adds missing environment variables dynamically."""
+        pairs = {
+            "AUTH__SECRET_KEY": secrets.token_urlsafe(32),
+            "DB__FIRST_SUPERUSER_PASSWORD": secrets.token_urlsafe(16),
+            "PROJECT_NAME": self.details.project_name,
+            "STACK_NAME": f"{self.details.project_name}-stack",
+        }
 
         env_path = Path(self.details.project_path, ENV_FILENAME)
-        with open(env_path, "r+") as f:
+        with open(env_path, "r") as f:
             content = f.readlines()
-            f.seek(0)
-            f.truncate()
 
-            for line in content:
-                if line.startswith(env_key):
-                    f.write(f"{env_key}={secret_key}\n")
-                else:
-                    f.write(line)
+        updated_file = []
+        for line in content:
+            update = line
+            if "=" in line:
+                key, _ = line.strip().split("=", 1)
+                update = f"{key}={pairs[key]}\n" if key in pairs else line
+
+            updated_file.append(update)
+
+        with open(env_path, "w") as f:
+            f.writelines(updated_file)
 
     def get_tasks(self) -> list[Callable]:
         """Gets the tasks to run as a list of methods."""
@@ -123,5 +136,5 @@ class SetupTasks:
         return [
             self._make_toml,
             self._move_assets,
-            self._add_secret_key,
+            self._update_env,
         ]

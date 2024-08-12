@@ -2,7 +2,6 @@ import pytest
 from unittest import mock
 import subprocess
 from pathlib import Path
-from math import ceil
 
 import toml
 import typer
@@ -51,7 +50,7 @@ class TestSetup:
             return_value=[mock.Mock(), mock.Mock()],
         )
         def test_tasks_executed(self, mock_exists, mock_tasks, setup: Setup):
-            with pytest.raises(typer.Exit) as excinfo:
+            with pytest.raises(typer.Exit):
                 setup.build()
 
             for task in mock_tasks.get_tasks():
@@ -108,49 +107,58 @@ class TestSetupTasks:
         assert result == target
 
     def test_move_assets(self, setup_tasks: SetupTasks):
-        with mock.patch("shutil.copytree") as mock_shutil:
+        with mock.patch("shutil.copytree") as mock_copytree, mock.patch(
+            "os.rename"
+        ) as mock_rename:
             template_dir = Path(setup_tasks.details.project_path, "template")
             template_dir.mkdir(parents=True, exist_ok=True)
             (template_dir / "file.txt").write_text("test content")
 
-            mock_shutil.return_value = None
+            mock_copytree.return_value = None
+            mock_rename.return_value = None
+
             setup_tasks._move_assets()
 
-            mock_shutil.assert_called_once_with(
+            mock_copytree.assert_called_once_with(
                 TEMPLATE_DIR,
                 setup_tasks.details.project_path,
                 dirs_exist_ok=True,
             )
 
-    def test_add_secret_key(self, setup_tasks: SetupTasks):
+            mock_rename.assert_called_once_with(
+                Path(setup_tasks.details.project_path, ".env.template"),
+                Path(setup_tasks.details.project_path, ENV_FILENAME),
+            )
+
+    def test_update_env(self, key_length, setup_tasks: SetupTasks):
         env_path = Path(setup_tasks.details.project_path, ENV_FILENAME)
         env_path.parent.mkdir(parents=True, exist_ok=True)
 
         setup_tasks._move_assets()
-        setup_tasks._add_secret_key()
+        setup_tasks._update_env()
 
         with open(env_path, "r") as f:
             content = f.readlines()
 
-        important_lines = all(
-            [
-                content[1].strip() == 'DB__URL="sqlite:///./dev_db.db"',
-                content[6].strip()
-                == "AUTH__ALGORITHM=HS512  # Options: HS256, HS384, or HS512",
-                content[7].strip() == "AUTH__ACCESS_TOKEN_EXPIRE_MINS=30",
-                content[8].strip() == "AUTH__ROUNDS=12",
-            ]
-        )
-
-        key_name = "AUTH__SECRET_KEY="
-        secret_key = content[5][len(key_name) :].strip()
-        checks = [
-            important_lines,
-            key_name in "\n".join(content),
-            len(secret_key) == ceil((256 // 8) * 8 / 6),
+        pairs = [
+            ("AUTH__SECRET_KEY", key_length(32)),
+            ("DB__FIRST_SUPERUSER_PASSWORD", key_length(16)),
+            ("PROJECT_NAME", setup_tasks.details.project_name),
+            ("STACK_NAME", f"{setup_tasks.details.project_name}-stack"),
         ]
 
-        assert all(checks), (secret_key, len(secret_key))
+        checks = []
+        for key, value in pairs:
+            for line in content:
+                if line.startswith(key):
+                    current_value = line.strip().split("=", 1)
+                    target = (
+                        len(current_value) if isinstance(value, int) else current_value
+                    )
+                    checks.append(target)
+                    break
+
+        assert all(checks)
 
     def test_get_tasks(self, setup_tasks: SetupTasks):
         tasks = setup_tasks.get_tasks()
@@ -159,5 +167,5 @@ class TestSetupTasks:
         assert tasks == [
             setup_tasks._make_toml,
             setup_tasks._move_assets,
-            setup_tasks._add_secret_key,
+            setup_tasks._update_env,
         ]

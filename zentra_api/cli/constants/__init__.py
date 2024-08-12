@@ -28,7 +28,7 @@ def pypi_url(package: str) -> str:
     return f"https://pypi.org/pypi/{package}/json"
 
 
-ENV_FILENAME = ".env.backend"
+ENV_FILENAME = ".env"
 PYTHON_VERSION = "3.12"
 
 # Define packages
