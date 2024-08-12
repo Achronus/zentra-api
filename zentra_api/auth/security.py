@@ -1,7 +1,7 @@
 from datetime import datetime, timedelta, timezone
 
 
-from zentra_api.config import AuthConfig
+from zentra_api.core.config import AuthConfig
 from zentra_api.responses.exc import CREDENTIALS_EXCEPTION
 
 import jwt
