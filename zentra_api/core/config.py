@@ -2,9 +2,10 @@ from typing import Self
 
 from pydantic_core import PydanticCustomError
 from zentra_api.auth.context import BcryptContext
+from zentra_api.auth.enums import JWTAlgorithm
 from zentra_api.core.utils import days_to_mins
 
-from pydantic import BaseModel, EmailStr, PrivateAttr, model_validator
+from pydantic import BaseModel, ConfigDict, EmailStr, PrivateAttr, model_validator
 from fastapi.security import OAuth2PasswordBearer
 from sqlalchemy import make_url
 from sqlalchemy.exc import ArgumentError
@@ -58,13 +59,15 @@ class AuthConfig(BaseModel):
     """Storage container for authentication settings."""
 
     SECRET_KEY: str
-    ALGORITHM: str = "HS256"
+    ALGORITHM: JWTAlgorithm = JWTAlgorithm.HS256
     ACCESS_TOKEN_EXPIRE_MINS: int = days_to_mins(7)
     TOKEN_URL: str = "auth/token"
     ROUNDS: int = 12
 
     _pwd_context = PrivateAttr(default=None)
     _oauth2_scheme = PrivateAttr(default=None)
+
+    model_config = ConfigDict(use_enum_values=True)
 
     def model_post_init(self, __context) -> None:
         self._pwd_context = BcryptContext(rounds=self.ROUNDS)
