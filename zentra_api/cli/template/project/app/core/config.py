@@ -22,8 +22,6 @@ class Settings(BaseSettings):
     DOMAIN: str = "localhost"
 
     PROJECT_NAME: str
-    STACK_NAME: str
-
     BACKEND_CORS_ORIGINS: Annotated[list[AnyUrl], BeforeValidator(parse_cors)] = []
 
     AUTH: AuthConfig
