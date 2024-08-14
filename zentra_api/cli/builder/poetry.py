@@ -14,7 +14,7 @@ class Description(BaseModel):
 
     name: str = "app"
     version: str = "0.1.0"
-    description: str = "A FastAPI backend for processing API data."
+    description: str = "A backend for processing API data."
     authors: list[str] = ["Placeholder <placeholder@email.com>"]
     readme: str = "README.md"
 

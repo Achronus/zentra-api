@@ -51,7 +51,7 @@ class BuildDetails:
         self,
         build_type: BuildType,
         core_packages: list[str],
-        dev_packages: list[str] | None = None,
+        dev_packages: list[str] | None = [],
         deployment_files: dict[str, list[str]] | None = None,
     ) -> None:
         self.build_type = build_type
