@@ -1,3 +1,4 @@
+from functools import partial
 import os
 from pathlib import Path
 import secrets
@@ -10,10 +11,8 @@ from zentra_api.cli.builder.poetry import PoetryFileBuilder
 from zentra_api.cli.conf import ProjectDetails
 from zentra_api.cli.conf.logger import set_loggers
 from zentra_api.cli.constants import (
-    CORE_PIP_PACKAGES,
-    DEV_PIP_PACKAGES,
     ENV_FILENAME,
-    TEMPLATE_DIR,
+    BuildDetails,
     SetupSuccessCodes,
     console,
 )
@@ -21,6 +20,7 @@ from zentra_api.cli.constants.display import (
     already_configured_panel,
     setup_complete_panel,
 )
+from zentra_api.cli.constants.enums import BuildType
 from zentra_api.cli.constants.message import creation_msg
 
 from rich.progress import track
@@ -29,11 +29,16 @@ from rich.progress import track
 class Setup:
     """Performs project creation for the `init` command."""
 
-    def __init__(self, project_name: str, root: Path = Path(os.getcwd())) -> None:
+    def __init__(
+        self,
+        project_name: str,
+        build_details: BuildDetails,
+        root: Path = Path(os.getcwd()),
+    ) -> None:
         self.project_name = project_name
 
         self.details = ProjectDetails(project_name=project_name, root=root)
-        self.setup_tasks = SetupTasks(self.details)
+        self.setup_tasks = SetupTasks(self.details, build_details)
 
     def project_exists(self) -> bool:
         """A helper method to check if a project with the `project_name` exists."""
@@ -62,12 +67,18 @@ class Setup:
 class SetupTasks:
     """Contains the tasks for the `init` command."""
 
-    def __init__(self, details: ProjectDetails, test_logging: bool = False) -> None:
-        self.details = details
+    def __init__(
+        self,
+        project_details: ProjectDetails,
+        build_details: BuildDetails,
+        test_logging: bool = False,
+    ) -> None:
+        self.project_details = project_details
+        self.build_details = build_details
 
         self.logger = set_loggers(test_logging)
 
-        self.file_builder = PoetryFileBuilder(self.details.author)
+        self.file_builder = PoetryFileBuilder(self.project_details.author)
 
     def _run_command(self, command: list[str]) -> None:
         """A helper method for running Python commands. Stores output to separate loggers."""
@@ -82,30 +93,31 @@ class SetupTasks:
 
     def _make_toml(self) -> None:
         """Creates the `pyproject.toml` file."""
-        toml_path = Path(self.details.project_path, "pyproject.toml")
+        toml_path = Path(self.project_details.project_path, "pyproject.toml")
         open(toml_path, "x").close()
 
-        self.file_builder.update(toml_path, CORE_PIP_PACKAGES, DEV_PIP_PACKAGES)
+        self.file_builder.update(
+            toml_path,
+            self.build_details.CORE_PACKAGES,
+            self.build_details.DEV_PACKAGES,
+        )
 
     def _move_assets(self) -> None:
         """Moves the template assets into the project directory."""
-        shutil.copytree(TEMPLATE_DIR, self.details.project_path, dirs_exist_ok=True)
-
-        os.rename(
-            Path(self.details.project_path, ".env.template"),
-            Path(self.details.project_path, ENV_FILENAME),
+        shutil.copytree(
+            self.build_details.TEMPLATE_DIR,
+            self.project_details.project_path,
+            dirs_exist_ok=True,
         )
 
-    def _update_env(self) -> None:
-        """Adds missing environment variables dynamically."""
-        pairs = {
-            "AUTH__SECRET_KEY": secrets.token_urlsafe(32),
-            "DB__FIRST_SUPERUSER_PASSWORD": secrets.token_urlsafe(16),
-            "PROJECT_NAME": self.details.project_name,
-            "STACK_NAME": f"{self.details.project_name}-stack",
-        }
+        os.rename(
+            Path(self.project_details.project_path, ".env.template"),
+            Path(self.project_details.project_path, ENV_FILENAME),
+        )
 
-        env_path = Path(self.details.project_path, ENV_FILENAME)
+    def _run_update_env(self, pairs: dict[str, str]) -> None:
+        """Updates an environment files value's given a set of key-value pairs."""
+        env_path = Path(self.project_details.project_path, ENV_FILENAME)
         with open(env_path, "r") as f:
             content = f.readlines()
 
@@ -121,20 +133,43 @@ class SetupTasks:
         with open(env_path, "w") as f:
             f.writelines(updated_file)
 
+    def _update_env(self) -> Callable:
+        """Adds missing environment variables dynamically based on build type."""
+        if self.build_details.build_type == BuildType.FASTAPI:
+            pairs = {
+                "AUTH__SECRET_KEY": secrets.token_urlsafe(32),
+                "DB__FIRST_SUPERUSER_PASSWORD": secrets.token_urlsafe(16),
+                "PROJECT_NAME": self.project_details.project_name,
+                "STACK_NAME": f"{self.project_details.project_name}-stack",
+            }
+        if self.build_details.build_type == BuildType.DJANGO:
+            pairs = {
+                "SECRET_KEY": secrets.token_urlsafe(38),
+            }
+
+        return partial(self._run_update_env, pairs)
+
     def get_tasks(self) -> list[Callable]:
         """Gets the tasks to run as a list of methods."""
-        os.makedirs(self.details.project_path, exist_ok=True)
-        os.chdir(self.details.project_path)
+        os.makedirs(self.project_details.project_path, exist_ok=True)
+        os.chdir(self.project_details.project_path)
 
         console.print(
             creation_msg(
-                self.details.project_name,
-                self.details.project_path,
+                self.project_details.project_name,
+                self.build_details.build_type.title(),
+                self.project_details.project_path,
             )
         )
 
         return [
             self._make_toml,
             self._move_assets,
-            self._update_env,
+            self._update_env(),
         ]
+
+
+class DjangoTasks:
+    """Contains the tasks unique to the Django build for the `init` command."""
+
+    pass

@@ -2,11 +2,13 @@ import secrets
 from typing import Annotated
 import typer
 
-from zentra_api.auth.enums import BuildType
+from zentra_api.auth.enums import DeploymentType
 
+from zentra_api.cli.commands.build import Build
 from zentra_api.cli.commands.setup import Setup
-from zentra_api.cli.constants import console
-from zentra_api.cli.constants.enums import AddItem, DefaultFolderOptions
+
+from zentra_api.cli.constants import BUILD_DETAILS_MAPPING, console
+from zentra_api.cli.constants.enums import AddItem, BuildType, DefaultFolderOptions
 from zentra_api.cli.constants.message import MSG_MAPPER, MessageHandler
 
 
@@ -24,17 +26,26 @@ msg_handler = MessageHandler(console, MSG_MAPPER)
 
 @app.command("init")
 def init(
+    type: Annotated[
+        BuildType,
+        typer.Argument(
+            help="The type of project to build",
+        ),
+    ],
     project_name: Annotated[
         str,
         typer.Argument(
-            help="The name of the FastAPI project to create",
+            help="The name of the project to create",
             show_default=False,
         ),
     ],
 ) -> None:
-    """Creates a new FastAPI project in a folder called <PROJECT_NAME>."""
+    """Creates a new <TYPE> project in a folder called <PROJECT_NAME>."""
     try:
-        setup = Setup(project_name)
+        if len(project_name) < 2:
+            raise ValueError("'project_name' must be at least 2 characters long.")
+
+        setup = Setup(project_name, BUILD_DETAILS_MAPPING[type.value])
         setup.build()
 
     except typer.Exit as e:
@@ -83,12 +94,17 @@ def new_key(
 @app.command("build")
 def build(
     type: Annotated[
-        BuildType,
-        typer.Argument(help="The type of BUILD to generate", show_choices=True),
-    ] = BuildType.RAILWAY,
+        DeploymentType,
+        typer.Argument(help="The type of deployment to generate", show_choices=True),
+    ] = DeploymentType.RAILWAY,
 ) -> None:
     """Creates a <TYPE> of production ready build for your project."""
-    pass
+    try:
+        build = Build(type)
+        build.create()
+
+    except typer.Exit as e:
+        msg_handler.msg(e)
 
 
 if __name__ == "__main__":

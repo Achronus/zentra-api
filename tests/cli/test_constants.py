@@ -7,9 +7,9 @@ from zentra_api.cli.constants.message import (
 
 
 def test_creation_msg():
-    result = creation_msg("test_project", "api/test_project")
+    result = creation_msg("test_project", "Fastapi", "api/test_project")
 
-    target = f"\n{MAGIC} Creating new [green]FastAPI[/green] project called: [magenta]test_project[/magenta] -> [yellow]api/test_project[/yellow] {MAGIC}\n"
+    target = f"\n{MAGIC} Creating new [green]Fastapi[/green] project called: [magenta]test_project[/magenta] -> [yellow]api/test_project[/yellow] {MAGIC}\n"
     assert result == target
 
 
