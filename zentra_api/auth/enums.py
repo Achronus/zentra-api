@@ -7,7 +7,7 @@ class JWTAlgorithm(StrEnum):
     HS512 = "HS512"
 
 
-class BuildType(StrEnum):
+class DeploymentType(StrEnum):
     RAILWAY = "railway"
     DOCKERFILE = "dockerfile"
     DOCKER_COMPOSE = "docker_compose"

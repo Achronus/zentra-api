@@ -13,3 +13,10 @@ class DefaultFolderOptions(StrEnum):
 
     ROUTE = "api"
     TEST = "test"
+
+
+class BuildType(StrEnum):
+    """The type of project to build."""
+
+    FASTAPI = "fastapi"
+    DJANGO = "django"
