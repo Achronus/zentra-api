@@ -5,7 +5,6 @@ import pytest
 from typer.testing import CliRunner
 
 from zentra_api.cli.commands.setup import Setup
-from zentra_api.cli.constants.enums import BuildType
 from zentra_api.cli.main import app
 
 runner = CliRunner()
@@ -19,7 +18,7 @@ class TestInit:
     @staticmethod
     def test_success(project_name: str):
         with patch.object(Setup, "build", return_value=None) as mock_build:
-            result = runner.invoke(app, ["init", BuildType.FASTAPI, project_name])
+            result = runner.invoke(app, ["init", project_name])
 
             assert result.exit_code == 0
             mock_build.assert_called_once()

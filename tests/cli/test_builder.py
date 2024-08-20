@@ -20,7 +20,7 @@ def test_description():
     target = {
         "name": "test_project",
         "version": "0.1.0",
-        "description": "A FastAPI backend for processing API data.",
+        "description": "A backend for processing API data.",
         "authors": ["Placeholder <placeholder@email.com>"],
         "readme": "README.md",
     }
@@ -74,7 +74,7 @@ def test_poetry_file():
             "poetry": {
                 "name": "test_project",
                 "version": "0.1.0",
-                "description": "A FastAPI backend for processing API data.",
+                "description": "A backend for processing API data.",
                 "authors": ["Placeholder <placeholder@email.com>"],
                 "readme": "README.md",
                 "scripts": {
@@ -127,7 +127,7 @@ class TestPoetryFileBuilder:
                 "poetry": {
                     "name": "app",
                     "version": "0.1.0",
-                    "description": "A FastAPI backend for processing API data.",
+                    "description": "A backend for processing API data.",
                     "authors": ["Placeholder <placeholder@email.com>"],
                     "readme": "README.md",
                     "scripts": {

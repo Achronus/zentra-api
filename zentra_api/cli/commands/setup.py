@@ -1,4 +1,3 @@
-from functools import partial
 import os
 from pathlib import Path
 import secrets
@@ -12,7 +11,7 @@ from zentra_api.cli.conf import ProjectDetails
 from zentra_api.cli.conf.logger import set_loggers
 from zentra_api.cli.constants import (
     ENV_FILENAME,
-    BuildDetails,
+    FASTAPI_DETAILS,
     SetupSuccessCodes,
     console,
 )
@@ -20,7 +19,6 @@ from zentra_api.cli.constants.display import (
     already_configured_panel,
     setup_complete_panel,
 )
-from zentra_api.cli.constants.enums import BuildType
 from zentra_api.cli.constants.message import creation_msg
 
 from rich.progress import track
@@ -32,13 +30,12 @@ class Setup:
     def __init__(
         self,
         project_name: str,
-        build_details: BuildDetails,
         root: Path = Path(os.getcwd()),
     ) -> None:
         self.project_name = project_name
 
         self.details = ProjectDetails(project_name=project_name, root=root)
-        self.setup_tasks = SetupTasks(self.details, build_details)
+        self.setup_tasks = SetupTasks(self.details)
 
     def project_exists(self) -> bool:
         """A helper method to check if a project with the `project_name` exists."""
@@ -70,11 +67,10 @@ class SetupTasks:
     def __init__(
         self,
         project_details: ProjectDetails,
-        build_details: BuildDetails,
         test_logging: bool = False,
     ) -> None:
         self.project_details = project_details
-        self.build_details = build_details
+        self.build_details = FASTAPI_DETAILS
 
         self.logger = set_loggers(test_logging)
 
@@ -115,8 +111,15 @@ class SetupTasks:
             Path(self.project_details.project_path, ENV_FILENAME),
         )
 
-    def _run_update_env(self, pairs: dict[str, str]) -> None:
+    def _update_env(self) -> None:
         """Updates an environment files value's given a set of key-value pairs."""
+        pairs = {
+            "AUTH__SECRET_KEY": secrets.token_urlsafe(32),
+            "DB__FIRST_SUPERUSER_PASSWORD": secrets.token_urlsafe(16),
+            "PROJECT_NAME": self.project_details.project_name,
+            "STACK_NAME": f"{self.project_details.project_name}-stack",
+        }
+
         env_path = Path(self.project_details.project_path, ENV_FILENAME)
         with open(env_path, "r") as f:
             content = f.readlines()
@@ -133,22 +136,6 @@ class SetupTasks:
         with open(env_path, "w") as f:
             f.writelines(updated_file)
 
-    def _update_env(self) -> Callable:
-        """Adds missing environment variables dynamically based on build type."""
-        if self.build_details.build_type == BuildType.FASTAPI:
-            pairs = {
-                "AUTH__SECRET_KEY": secrets.token_urlsafe(32),
-                "DB__FIRST_SUPERUSER_PASSWORD": secrets.token_urlsafe(16),
-                "PROJECT_NAME": self.project_details.project_name,
-                "STACK_NAME": f"{self.project_details.project_name}-stack",
-            }
-        if self.build_details.build_type == BuildType.DJANGO:
-            pairs = {
-                "SECRET_KEY": secrets.token_urlsafe(38),
-            }
-
-        return partial(self._run_update_env, pairs)
-
     def get_tasks(self) -> list[Callable]:
         """Gets the tasks to run as a list of methods."""
         os.makedirs(self.project_details.project_path, exist_ok=True)
@@ -157,7 +144,7 @@ class SetupTasks:
         console.print(
             creation_msg(
                 self.project_details.project_name,
-                self.build_details.build_type.title(),
+                "FastAPI",
                 self.project_details.project_path,
             )
         )
@@ -165,11 +152,5 @@ class SetupTasks:
         return [
             self._make_toml,
             self._move_assets,
-            self._update_env(),
+            self._update_env,
         ]
-
-
-class DjangoTasks:
-    """Contains the tasks unique to the Django build for the `init` command."""
-
-    pass

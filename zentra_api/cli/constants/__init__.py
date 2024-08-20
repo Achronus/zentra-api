@@ -1,7 +1,6 @@
 from enum import Enum
 from rich.console import Console
 
-from zentra_api.cli.constants.enums import BuildType
 from zentra_api.utils.package import package_path
 
 
@@ -49,17 +48,17 @@ class BuildDetails:
 
     def __init__(
         self,
-        build_type: BuildType,
+        build_type: str,
         core_packages: list[str],
         dev_packages: list[str] | None = [],
         deployment_files: dict[str, list[str]] | None = None,
     ) -> None:
         self.build_type = build_type
         self.TEMPLATE_DIR = package_path(
-            "zentra_api", ["cli", "template", build_type.value, "project"]
+            "zentra_api", ["cli", "template", build_type, "project"]
         )
         self.DEPLOYMENT_DIR = package_path(
-            "zentra_api", ["cli", "template", build_type.value, "deployment"]
+            "zentra_api", ["cli", "template", build_type, "deployment"]
         )
 
         self.CORE_PACKAGES = core_packages
@@ -74,7 +73,7 @@ RAILWAY_FILES = DOCKER_FILES + ["railway.toml"]
 
 # Build details
 FASTAPI_DETAILS = BuildDetails(
-    build_type=BuildType.FASTAPI,
+    build_type="fastapi",
     deployment_files={
         "railway": RAILWAY_FILES,
         "dockerfile": DOCKER_FILES,
@@ -93,20 +92,3 @@ FASTAPI_DETAILS = BuildDetails(
         "pytest-cov",
     ],
 )
-
-DJANGO_DETAILS = BuildDetails(
-    build_type=BuildType.DJANGO,
-    core_packages=[
-        "django",
-        "django-cors-headers",
-        "python-dotenv",
-        "pyjwt",
-        "djangorestframework",
-        "djangorestframework-simplejwt",
-    ],
-)
-
-BUILD_DETAILS_MAPPING = {
-    "fastapi": FASTAPI_DETAILS,
-    "django": DJANGO_DETAILS,
-}

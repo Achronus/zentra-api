@@ -1,4 +1,3 @@
-from functools import partial
 import pytest
 from unittest import mock
 import subprocess
@@ -9,17 +8,13 @@ import typer
 
 from zentra_api.cli.commands.setup import Setup, SetupTasks
 from zentra_api.cli.conf import ProjectDetails
-from zentra_api.cli.constants import (
-    ENV_FILENAME,
-    FASTAPI_DETAILS,
-    SetupSuccessCodes,
-)
+from zentra_api.cli.constants import ENV_FILENAME, SetupSuccessCodes
 
 
 class TestSetup:
     @pytest.fixture
     def setup_fastapi(self, tmp_path) -> Setup:
-        return Setup("test_project", build_details=FASTAPI_DETAILS, root=tmp_path)
+        return Setup("test_project", root=tmp_path)
 
     class TestProjectExists:
         @staticmethod
@@ -40,7 +35,9 @@ class TestSetup:
     class TestFastAPIBuild:
         @pytest.fixture
         def setup_fastapi(self) -> Setup:
-            return Setup("test_project", build_details=FASTAPI_DETAILS)
+            return Setup(
+                "test_project",
+            )
 
         @mock.patch.object(Setup, "project_exists", return_value=False)
         @mock.patch.object(
@@ -80,11 +77,7 @@ class TestFastAPISetupTasks:
 
     @pytest.fixture
     def setup_fastapi_tasks(self, project_details: ProjectDetails) -> SetupTasks:
-        return SetupTasks(
-            project_details=project_details,
-            build_details=FASTAPI_DETAILS,
-            test_logging=True,
-        )
+        return SetupTasks(project_details=project_details, test_logging=True)
 
     def test_run_command(self, setup_fastapi_tasks: SetupTasks):
         with mock.patch("subprocess.run") as mock_subprocess:
@@ -174,8 +167,8 @@ class TestFastAPISetupTasks:
         tasks = setup_fastapi_tasks.get_tasks()
 
         assert len(tasks) == 3
-        assert [tasks[0], tasks[1]] == [
+        assert [
             setup_fastapi_tasks._make_toml,
             setup_fastapi_tasks._move_assets,
+            setup_fastapi_tasks._update_env,
         ]
-        assert isinstance(setup_fastapi_tasks._update_env(), partial)
