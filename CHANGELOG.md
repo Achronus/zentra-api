@@ -2,6 +2,25 @@
 
 All notable changes to this project will be documented in this file.
 
+## [0.1.10] - 2024-08-22
+
+### 🚀 Features
+
+- *(alembic)* Added `alembic` integration.
+
+### 🐛 Bug Fixes
+
+- *(template)* Fixed invalid imports and config bugs.
+
+### 🚜 Refactor
+
+- *(poetry)* Simplified Poetry script creation.
+- *(scripts)* Moved Poetry scripts to separate directory.
+
+### ⚙️ Miscellaneous Tasks
+
+- *(workflows)* Moved codecov into separate workflow
+
 ## [0.1.9] - 2024-08-22
 
 ### 🚀 Features
