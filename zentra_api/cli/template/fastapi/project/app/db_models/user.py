@@ -1,6 +1,6 @@
 from sqlalchemy import Boolean, Column, ForeignKey, Integer, String
 
-from app.core.db import Base, create_tables
+from app.core.db import Base
 
 
 class DBUser(Base):
@@ -24,6 +24,3 @@ class DBUserDetails(Base):
     email = Column(String, unique=True, default=None)
     phone = Column(String, unique=True, default=None)
     full_name = Column(String, default=None)
-
-
-create_tables()

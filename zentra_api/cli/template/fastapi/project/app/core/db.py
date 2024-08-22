@@ -16,8 +16,3 @@ def get_db():
         yield db
     finally:
         db.close()
-
-
-def create_tables() -> None:
-    """Creates all the database tables in the `Base` instance."""
-    Base.metadata.create_all(bind=engine)

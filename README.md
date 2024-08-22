@@ -62,7 +62,7 @@ With one command you'll have a working app in minutes with:
 
 - Built-in user authentication with JWT token protection
 - Preconfigured CORs middleware
-- A [SQLite](https://www.sqlite.org/) database configured with [Alembic](https://alembic.sqlalchemy.org/en/latest/) (🔜 _Alembic - coming soon!_ 🔜)
+- A [SQLite](https://www.sqlite.org/) database configured with [Alembic](https://alembic.sqlalchemy.org/en/latest/)
 - Built-in templated route responses following best practices
 - A simple folder structure to make project navigation a breeze
 - And, access to our package filled with other goodies

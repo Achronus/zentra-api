@@ -14,6 +14,14 @@ from zentra_api.cli.builder.poetry import (
 from zentra_api.cli.constants import PYTHON_VERSION, pypi_url
 
 
+def poetry_scripts() -> list[Script]:
+    return [
+        Script(name="run-dev", command="scripts.run:development"),
+        Script(name="run-prod", command="scripts.run:production"),
+        Script(name="db-migrate", command="scripts.db_migrate:main"),
+    ]
+
+
 def test_description():
     desc = Description(name="test_project")
 
@@ -57,10 +65,7 @@ def test_poetry_file():
     core_deps = [PipPackage(name="fastapi", version="0.111.1")]
     dev_deps = [PipPackage(name="pytest", version="2.0.0")]
     description = Description(name="test_project")
-    scripts = [
-        Script(name="run-dev", command="app.run:development"),
-        Script(name="run-prod", command="app.run:production"),
-    ]
+    scripts = poetry_scripts()
 
     poetry_file = PoetryFile(
         desc=description,
@@ -78,8 +83,9 @@ def test_poetry_file():
                 "authors": ["Placeholder <placeholder@email.com>"],
                 "readme": "README.md",
                 "scripts": {
-                    "run-dev": "app.run:development",
-                    "run-prod": "app.run:production",
+                    "run-dev": "scripts.run:development",
+                    "run-prod": "scripts.run:production",
+                    "db-migrate": "scripts.db_migrate:main",
                 },
                 "dependencies": {
                     "python": "^3.12",
@@ -112,10 +118,7 @@ class TestPoetryFileBuilder:
     def target_file(self) -> PoetryFile:
         return PoetryFile(
             desc=Description(),
-            scripts=[
-                Script(name="run-dev", command="app.run:development"),
-                Script(name="run-prod", command="app.run:production"),
-            ],
+            scripts=poetry_scripts(),
             core_deps=[PipPackage(name="flask", version="1.2.3")],
             dev_deps=[PipPackage(name="pytest", version="2.3.4")],
         )
@@ -131,8 +134,9 @@ class TestPoetryFileBuilder:
                     "authors": ["Placeholder <placeholder@email.com>"],
                     "readme": "README.md",
                     "scripts": {
-                        "run-dev": "app.run:development",
-                        "run-prod": "app.run:production",
+                        "run-dev": "scripts.run:development",
+                        "run-prod": "scripts.run:production",
+                        "db-migrate": "scripts.db_migrate:main",
                     },
                     "dependencies": {
                         "python": "^3.12",
