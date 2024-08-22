@@ -2,6 +2,40 @@
 
 All notable changes to this project will be documented in this file.
 
+## [0.1.9] - 2024-08-22
+
+### 🚀 Features
+
+- *(template)* Added deployment template files with build command
+
+### 🐛 Bug Fixes
+
+- *(build)* Fixed build issues with Django projects
+
+### 🚜 Refactor
+
+- *(template)* Moved template files to separate directory
+- *(setup)* Simplified template directory retrieval
+- *(msgs)* Updated output messages for `init` command for clarity
+- *(config)* Expanded configuration settings for usability
+- *(template)* Updated template config file structure to simplify
+- *(config)* Updated algorithm type to specific options
+- *(cli)* Updated `new-key` command logic to simplify
+- *(env)* Expanded environment variable template
+- *(setup)* Enhanced dynamic env file updates
+- *(setup)* Updated `init` command logic to include Django projects
+- *(setup)* Removed Django templates and settings - discontinued
+
+### 🧪 Testing
+
+- *(msgs)* Fixed broken message tests
+- *(config)* Added and updated tests for config
+- *(cli)* Refactored `key_length` method to fixture
+
+### Build
+
+- *(poetry)* Updated FastAPI to latest package version
+
 ## [0.1.8] - 2024-08-03
 
 ### 🚜 Refactor
