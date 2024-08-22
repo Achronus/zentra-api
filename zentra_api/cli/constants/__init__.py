@@ -33,8 +33,9 @@ PYTHON_VERSION = "3.12"
 
 # Poetry scripts
 POETRY_SCRIPTS = [
-    ("run-dev", "app.run:development"),
-    ("run-prod", "app.run:production"),
+    ("run-dev", "scripts.run:development"),
+    ("run-prod", "scripts.run:production"),
+    ("db-migrate", "scripts.db_migrate:main"),
 ]
 
 
