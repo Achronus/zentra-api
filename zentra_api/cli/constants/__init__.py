@@ -31,6 +31,12 @@ def pypi_url(package: str) -> str:
 ENV_FILENAME = ".env"
 PYTHON_VERSION = "3.12"
 
+# Poetry scripts
+POETRY_SCRIPTS = [
+    ("run-dev", "app.run:development"),
+    ("run-prod", "app.run:production"),
+]
+
 
 class SetupSuccessCodes(Enum):
     COMPLETE = 10

@@ -4,7 +4,7 @@ from pathlib import Path
 import toml
 
 from zentra_api.cli.conf.logger import task_error_logger, task_test_logger
-from zentra_api.cli.constants import PYTHON_VERSION, pypi_url
+from zentra_api.cli.constants import POETRY_SCRIPTS, PYTHON_VERSION, pypi_url
 
 from pydantic import BaseModel, field_validator
 
@@ -99,8 +99,7 @@ class PoetryFileBuilder:
 
         self.description = Description(authors=[author])
         self.scripts = [
-            Script(name="run-dev", command="app.run:development"),
-            Script(name="run-prod", command="app.run:production"),
+            Script(name=script[0], command=script[1]) for script in POETRY_SCRIPTS
         ]
 
     def build(self, core_deps: list[str], dev_deps: list[str]) -> PoetryFile:
