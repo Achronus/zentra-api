@@ -1,11 +1,6 @@
-from app.config import SETTINGS
-
 from .user import DBUser, DBUserDetails
 
 from zentra_api.crud import CRUD, UserCRUD
-
-
-SETTINGS.SQL.create_all()
 
 
 class DBConnections:

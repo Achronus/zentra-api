@@ -1,6 +1,7 @@
 from contextlib import asynccontextmanager
 
 from app import auth
+from app.core.config import SETTINGS
 
 from fastapi import FastAPI, HTTPException, Request
 from fastapi.middleware.cors import CORSMiddleware
@@ -19,14 +20,9 @@ app = FastAPI(docs_url="/api/docs", redoc_url=None, lifespan=lifespan)
 
 app.include_router(auth.router, prefix="/api")
 
-origins = [
-    "http://localhost:3000",
-    "http://127.0.0.1:3000",
-]
-
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=origins,
+    allow_origins=SETTINGS.BACKEND_CORS_ORIGINS,
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],

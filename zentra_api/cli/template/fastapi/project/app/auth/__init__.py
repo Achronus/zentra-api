@@ -3,14 +3,14 @@ from typing import Annotated
 
 from app.auth.response import CreateUserResponse, GetUserDetailsResponse
 from app.auth.schema import CreateUser, GetUser, UserBase
-from app.config import (
+from app.core.config import security
+from app.core.dependencies import (
     db_dependency,
     oauth2_dependency,
     oauth2_form_dependency,
-    security,
 )
-from app.db import CONNECT
-from app.db.user import DBUser, DBUserDetails
+from app.db_models import CONNECT
+from app.db_models.user import DBUser, DBUserDetails
 
 from fastapi import APIRouter, Depends, HTTPException, status
 

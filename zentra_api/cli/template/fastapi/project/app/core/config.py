@@ -14,6 +14,7 @@ class Settings(BaseSettings):
     model_config = SettingsConfigDict(
         env_file=".env",
         env_ignore_empty=True,
+        extra="ignore",
         env_nested_delimiter="__",
     )
 
@@ -22,7 +23,9 @@ class Settings(BaseSettings):
     DOMAIN: str = "localhost"
 
     PROJECT_NAME: str
-    BACKEND_CORS_ORIGINS: Annotated[list[AnyUrl], BeforeValidator(parse_cors)] = []
+    BACKEND_CORS_ORIGINS: Annotated[
+        str | list[AnyUrl], BeforeValidator(parse_cors)
+    ] = []
 
     AUTH: AuthConfig
     EMAIL: EmailConfig
