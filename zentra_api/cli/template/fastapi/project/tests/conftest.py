@@ -1,7 +1,7 @@
 import pytest
 
 from app.main import app
-from app.config import get_db
+from app.core.db import get_db
 
 from fastapi.testclient import TestClient
 from sqlalchemy import create_engine, StaticPool
@@ -34,15 +34,15 @@ def get_test_db():
 
 
 def setup() -> None:
-    from app.config import SETTINGS
+    from app.core.db import Base
 
-    SETTINGS.SQL.Base.metadata.create_all(bind=test_engine)
+    Base.metadata.create_all(bind=test_engine)
 
 
 def teardown() -> None:
-    from app.config import SETTINGS
+    from app.core.db import Base
 
-    SETTINGS.SQL.Base.metadata.drop_all(bind=test_engine)
+    Base.metadata.drop_all(bind=test_engine)
 
 
 @pytest.fixture(scope="session", autouse=True)

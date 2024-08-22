@@ -1,7 +1,7 @@
 from unittest.mock import MagicMock, patch
 from fastapi.testclient import TestClient
 
-from app.config import get_db
+from app.core.db import get_db
 
 from sqlalchemy.orm import Session
 
@@ -15,7 +15,7 @@ class TestGetDB:
         mock_session = MagicMock(spec=Session)
         mock_session_local = MagicMock(return_value=mock_session)
 
-        with patch("app.config.SETTINGS.SQL.SessionLocal", mock_session_local):
+        with patch("app.core.db.SessionLocal", mock_session_local):
             db_gen = get_db()
             db = next(db_gen)
 
