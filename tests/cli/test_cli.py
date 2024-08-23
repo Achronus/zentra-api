@@ -1,7 +1,7 @@
 from unittest.mock import patch
 import pytest
 
-
+import typer
 from typer.testing import CliRunner
 
 from zentra_api.cli.commands.setup import Setup
@@ -26,6 +26,18 @@ class TestInit:
     @staticmethod
     def test_arg_missing():
         result = runner.invoke(app, ["init"])
+        assert result.exit_code != 0
+
+    @staticmethod
+    def test_typer_error(project_name: str):
+        with patch.object(Setup, "build", side_effect=typer.Exit(code=-1)):
+            result = runner.invoke(app, ["init", project_name])
+
+            assert result.exit_code == 0
+
+    @staticmethod
+    def test_invalid_project_name():
+        result = runner.invoke(app, ["init", "."])
         assert result.exit_code != 0
 
 
