@@ -1,11 +1,11 @@
 from enum import Enum
+import importlib.resources as pkg_resources
 from rich.console import Console
 
 from zentra_api.utils.package import package_path
 
 
 console = Console()
-
 
 # Core URLs
 DOCS_URL = "https://zentra.achronus.dev"
@@ -14,6 +14,9 @@ GITHUB_ISSUES_URL = f"{GITHUB_ROOT}/issues"
 
 GETTING_STARTED_URL = f"{DOCS_URL}/starting/api/"
 ERROR_GUIDE_URL = f"{DOCS_URL}/help/errors/"
+
+PKG_DIR = pkg_resources.files("zentra_api")
+LOG_FOLDER = PKG_DIR.joinpath("logs")
 
 ROOT_COMMAND = "zentra-api"
 
@@ -40,6 +43,7 @@ POETRY_SCRIPTS = [
 
 
 class SetupSuccessCodes(Enum):
+    TEST_SUCCESS = -2
     COMPLETE = 10
     ALREADY_CONFIGURED = 11
 

@@ -1,6 +1,8 @@
 import logging
-import importlib.resources as pkg_resources
+
 from pathlib import Path
+
+from zentra_api.cli.constants import LOG_FOLDER
 
 
 class BaseLogger:
@@ -67,11 +69,14 @@ class DebugLogger(BaseLogger):
     """A logger specific for debugging purposes."""
 
     def __init__(
-        self, logger_name: str, log_filename: str = "debug.log", active: bool = False
+        self,
+        logger_name: str,
+        log_filename: str = "debug.log",
+        log_folder: str = LOG_FOLDER,
+        active: bool = False,
     ):
         super().__init__(logger_name, level=logging.DEBUG)
 
-        log_folder = pkg_resources.files("zentra_api").joinpath("logs")
         log_filepath = Path(log_folder, log_filename)
 
         if not log_filepath.exists():
@@ -85,31 +90,31 @@ class DebugLogger(BaseLogger):
 task_output_logger = DebugLogger(
     "TaskOutputLogger",
     "task_output.log",
-    True,
+    active=True,
 )
 task_error_logger = DebugLogger(
     "TaskErrorLogger",
     "task_error.log",
-    True,
+    active=True,
 )
 task_test_logger = DebugLogger(
     "TaskTestLogger",
     "testing.log",
-    True,
+    active=True,
 )
 
 
-class Loggers:
-    """A store container for loggers."""
+class ErrorLoggers:
+    """A storage container for error loggers."""
 
     def __init__(self, stdout: DebugLogger, stderr: DebugLogger) -> None:
         self.stdout = stdout
         self.stderr = stderr
 
 
-def set_loggers(testing: bool = False) -> Loggers:
+def set_loggers(testing: bool = False) -> ErrorLoggers:
     """Returns a logger object containing debug loggers."""
     if testing:
-        return Loggers(stdout=task_test_logger, stderr=task_test_logger)
+        return ErrorLoggers(stdout=task_test_logger, stderr=task_test_logger)
 
-    return Loggers(stdout=task_output_logger, stderr=task_error_logger)
+    return ErrorLoggers(stdout=task_output_logger, stderr=task_error_logger)
