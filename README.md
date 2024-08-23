@@ -12,6 +12,11 @@
 
 Zentra API, your CLI tool for building [FastAPI](https://fastapi.tiangolo.com/) projects faster.
 
+Found on:
+
+- [PyPi](https://pypi.org/project/zentra-api)
+- [GitHub](https://github.com/Achronus/zentra-api)
+
 # Zentra API
 
 Streamline your workflow, automate repetitive tasks, and generate high-quality code in minutes. Whether you're a seasoned developer or just starting out, Zentra API empowers you to build robust, scalable, and production-ready [FastAPI](https://fastapi.tiangolo.com/) applications with unparalleled speed and efficiency. 
@@ -47,7 +52,7 @@ And so much more...
 To get started, install the `API` package with [Poetry](https://python-poetry.org/):
 
 ```bash
-pip install zentra_api poetry
+pip install zentra-api poetry
 ```
 
 We use Poetry for managing our project packages and using custom commands, such as `run-dev` for the development environment.
