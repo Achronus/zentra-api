@@ -2,6 +2,18 @@
 
 All notable changes to this project will be documented in this file.
 
+## [0.1.11] - 2024-08-23
+
+### 🚀 Features
+
+- *(init)* Added `--hide-output` flag for omitting console output.
+
+### 🧪 Testing
+
+- *(templates)* Updated template tests to pass.
+- *(output)* Added tests for logging and output messages.
+- *(init)* Added error test cases for coverage.
+
 ## [0.1.10] - 2024-08-22
 
 ### 🚀 Features
