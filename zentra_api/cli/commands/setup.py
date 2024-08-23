@@ -30,9 +30,11 @@ class Setup:
     def __init__(
         self,
         project_name: str,
+        no_output: bool = False,
         root: Path = Path(os.getcwd()),
     ) -> None:
         self.project_name = project_name
+        self.no_output = no_output
 
         self.details = ProjectDetails(project_name=project_name, root=root)
         self.setup_tasks = SetupTasks(self.details)
@@ -49,15 +51,19 @@ class Setup:
     def build(self) -> None:
         """Builds the project."""
         if self.project_exists():
-            console.print(already_configured_panel(self.project_name))
+            if not self.no_output:
+                console.print(already_configured_panel(self.project_name))
+
             raise typer.Exit(code=SetupSuccessCodes.ALREADY_CONFIGURED)
 
-        tasks = self.setup_tasks.get_tasks()
+        tasks = self.setup_tasks.get_tasks(self.no_output)
 
-        for task in track(tasks, description="Building..."):
+        for task in track(tasks, description="Building...", disable=self.no_output):
             task()
 
-        console.print(setup_complete_panel(self.project_name))
+        if not self.no_output:
+            console.print(setup_complete_panel(self.project_name))
+
         raise typer.Exit(code=SetupSuccessCodes.COMPLETE)
 
 
@@ -136,18 +142,19 @@ class SetupTasks:
         with open(env_path, "w") as f:
             f.writelines(updated_file)
 
-    def get_tasks(self) -> list[Callable]:
+    def get_tasks(self, no_output: bool = False) -> list[Callable]:
         """Gets the tasks to run as a list of methods."""
         os.makedirs(self.project_details.project_path, exist_ok=True)
         os.chdir(self.project_details.project_path)
 
-        console.print(
-            creation_msg(
-                self.project_details.project_name,
-                "FastAPI",
-                self.project_details.project_path,
+        if not no_output:
+            console.print(
+                creation_msg(
+                    self.project_details.project_name,
+                    "FastAPI",
+                    self.project_details.project_path,
+                )
             )
-        )
 
         return [
             self._make_toml,

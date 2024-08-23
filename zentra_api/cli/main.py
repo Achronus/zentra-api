@@ -33,13 +33,22 @@ def init(
             show_default=False,
         ),
     ],
+    hide_output: Annotated[
+        bool,
+        typer.Option(
+            "--hide-output",
+            "-ho",
+            help="Suppress console output",
+            is_eager=True,
+        ),
+    ] = False,
 ) -> None:
     """Creates a new FastAPI project in a folder called <PROJECT_NAME>."""
     try:
         if len(project_name) < 2:
             raise ValueError("'project_name' must be at least 2 characters long.")
 
-        setup = Setup(project_name)
+        setup = Setup(project_name, no_output=hide_output)
         setup.build()
 
     except typer.Exit as e:
