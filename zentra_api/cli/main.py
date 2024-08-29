@@ -4,19 +4,21 @@ import typer
 
 from zentra_api.auth.enums import DeploymentType
 
+from zentra_api.cli.commands.add import AddRoutes
 from zentra_api.cli.commands.build import Build
 from zentra_api.cli.commands.setup import Setup
 
 from zentra_api.cli.constants import console
-from zentra_api.cli.constants.enums import AddItem, DefaultFolderOptions
+from zentra_api.cli.constants.enums import RouteOptions
 from zentra_api.cli.constants.message import MSG_MAPPER, MessageHandler
+from zentra_api.validation import SingleWord
 
 
 init_command = typer.style("init", typer.colors.YELLOW)
-add_command = typer.style("add", typer.colors.YELLOW)
+add_command = typer.style("add-", typer.colors.YELLOW)
 
 app = typer.Typer(
-    help=f"Welcome to Zentra API! Create a project with {init_command} or add something with {add_command}.",
+    help=f"Welcome to Zentra API! Create a project with {init_command} or add something with one of the {add_command} commands.",
     rich_markup_mode="rich",
     pretty_exceptions_enable=True,
 )
@@ -55,29 +57,28 @@ def init(
         msg_handler.msg(e)
 
 
-@app.command("add")
+@app.command("add-route")
 def add(
-    item: Annotated[
-        AddItem,
+    name: Annotated[
+        str,
         typer.Argument(
-            help="The type of item to add.",
+            help="The name of the route set to add. Must be a single word that only contains letters (a-zA-Z).",
             show_default=False,
         ),
     ],
-    folder: Annotated[
-        str,
-        typer.Option(
-            help="The folder to add the item to. E.g., 'auth'. When <item='route'>, defaults to 'api'. When <item='test'> defaults to 'tests'.",
-            show_default=False,
+    option: Annotated[
+        RouteOptions,
+        typer.Argument(
+            help="A string of characters representing the set of routes to add. 'c' = create, 'r' = read, 'u' = update, 'd' = delete.",
         ),
-    ] = None,
+    ] = "crud",
 ) -> None:
-    """Adds a new <ITEM> into the project in <FOLDER> with <NAME>."""
+    """Adds a new set of routes based on <OPTION> into the project in a folder called <NAME>."""
     try:
-        if not folder:
-            folder = getattr(DefaultFolderOptions, item.upper())
+        SingleWord(value=name)
 
-        print(folder)
+        routes = AddRoutes(name=name, option=option)
+        routes.build()
 
     except typer.Exit as e:
         msg_handler.msg(e)
