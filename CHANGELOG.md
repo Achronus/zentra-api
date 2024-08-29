@@ -2,6 +2,12 @@
 
 All notable changes to this project will be documented in this file.
 
+## [0.1.12] - 2024-08-29
+
+### 🐛 Bug Fixes
+
+- *(alembic)* Added  missing`ini` template file.
+
 ## [0.1.11] - 2024-08-23
 
 ### 🚀 Features
