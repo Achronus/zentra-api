@@ -56,11 +56,24 @@ class DatabaseConfig(BaseModel):
 
 
 class AuthConfig(BaseModel):
-    """Storage container for authentication settings."""
+    """
+    Storage container for authentication settings.
 
-    SECRET_KEY: str
+    Parameters:
+        SECRET_ACCESS_KEY (string): the JWT access token encryption key
+        SECRET_REFRESH_KEY (string): the JWT refresh token encryption key
+        ALGORITHM: (zentra_api.auth.enums.JWTAlgorithm, optional): the JWT encryption algorithm. Options: `['HS256', 'HS384', 'HS512']`. `HS256` by default
+        ACCESS_TOKEN_EXPIRE_MINS (integer, optional): the number of minutes an access token is valid for. `15` by default
+        REFRESH_TOKEN_EXPIRE_MINS (integer, optional): the number of minutes a refresh token is valid for. `10080` by default (7 days)
+        TOKEN_URL (string, optional): the token route URL. `auth/token` by default
+        ROUNDS (integer, optional): the computational cost factor for bcrypt hashing. `12` by default
+    """
+
+    SECRET_ACCESS_KEY: str
+    SECRET_REFRESH_KEY: str
     ALGORITHM: JWTAlgorithm = JWTAlgorithm.HS256
-    ACCESS_TOKEN_EXPIRE_MINS: int = days_to_mins(7)
+    ACCESS_TOKEN_EXPIRE_MINS: int = 15
+    REFRESH_TOKEN_EXPIRE_MINS: int = days_to_mins(7)
     TOKEN_URL: str = "auth/token"
     ROUNDS: int = 12
 

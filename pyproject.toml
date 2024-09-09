@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "zentra_api"
-version = "0.1.12"
+version = "0.1.13"
 description = "A CLI tool for building FastAPI apps faster."
 authors = ["Ryan Partridge <rpartridge101@gmail.com>"]
 license = "MIT License"
@@ -35,6 +35,7 @@ pydantic = "^2.8.2"
 toml = "^0.10.2"
 sqlalchemy = "^2.0.31"
 bcrypt = "^4.2.0"
+inflect = "^7.3.1"
 
 [tool.poetry.group.dev.dependencies]
 pytest = "^8.2"
