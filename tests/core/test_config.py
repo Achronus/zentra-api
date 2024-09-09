@@ -34,9 +34,11 @@ def database_config() -> DatabaseConfig:
 @pytest.fixture
 def auth_config() -> AuthConfig:
     return AuthConfig(
-        SECRET_KEY="supersecret",
+        SECRET_ACCESS_KEY="supersecretaccess",
+        SECRET_REFRESH_KEY="supersecretrefresh",
         ALGORITHM="HS256",
-        ACCESS_TOKEN_EXPIRE_MINUTES=10080,
+        ACCESS_TOKEN_EXPIRE_MINS=15,
+        REFRESH_TOKEN_EXPIRE_MINUTES=10080,
         TOKEN_URL="auth/token",
         ROUNDS=12,
     )

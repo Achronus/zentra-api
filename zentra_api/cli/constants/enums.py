@@ -29,3 +29,9 @@ class RouteMethods(StrEnum):
     PUT = "put"
     PATCH = "patch"
     DELETE = "delete"
+
+
+class DeploymentType(StrEnum):
+    RAILWAY = "railway"
+    DOCKERFILE = "dockerfile"
+    DOCKER_COMPOSE = "docker_compose"
