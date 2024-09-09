@@ -17,8 +17,7 @@ from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.orm import Session
 
 from zentra_api.schema import Token
-from zentra_api.responses import SuccessMsgResponse, get_response_models
-from zentra_api.responses.exc import USER_EXCEPTION
+from zentra_api.responses import SuccessMsgResponse, exceptions, get_response_models
 
 
 router = APIRouter(prefix="/auth", tags=["Authentication"])
@@ -39,7 +38,7 @@ def authenticate_user(db: Session, username: str, password: str) -> DBUser | boo
 
 async def get_current_user(token: oauth2_dependency, db: db_dependency) -> GetUser:
     """Gets the current user based on the given token."""
-    username = security.verify_token(token)
+    username = security.verify_access_token(token)
 
     user: DBUser = CONNECT.user.get_by_username(db, username)
     details: DBUserDetails = CONNECT.user_details.get(db, user.id)
@@ -84,9 +83,7 @@ async def register_user(user: CreateUser, db: db_dependency):
     exists = CONNECT.user.get_by_username(db, user.username)
 
     if exists:
-        raise HTTPException(
-            status.HTTP_400_BAD_REQUEST, detail="User already registered."
-        )
+        raise exceptions.USER_ALREADY_REGISTERED
 
     encrypted_user: CreateUser = security.encrypt(user, "password")
     created_user: DBUser = CONNECT.user.create(db, encrypted_user.model_dump())
@@ -110,22 +107,47 @@ async def login_for_access_token(form_data: oauth2_form_dependency, db: db_depen
     user = authenticate_user(db, form_data.username, form_data.password)
 
     if not user:
-        raise USER_EXCEPTION
+        raise exceptions.INVALID_USER_DETAILS
 
     access_token = security.create_access_token({"sub": user.username})
-    return Token(access_token=access_token, token_type="bearer")
+    refresh_token = security.create_refresh_token({"sub": user.username})
+    return Token(
+        access_token=access_token,
+        refresh_token=refresh_token,
+        token_type="bearer",
+    )
 
 
 @router.post(
-    "/verify-token/{token}",
+    "/token/verify/{token}",
     status_code=status.HTTP_200_OK,
     responses=get_response_models(401),
     response_model=SuccessMsgResponse,
 )
 async def verify_user_token(token: oauth2_dependency):
-    security.verify_token(token)
+    security.verify_access_token(token)
     return SuccessMsgResponse(
         code=status.HTTP_200_OK,
         message="Token is valid.",
         headers={"WWW-Authenticate": "Bearer"},
+    )
+
+
+@router.post(
+    "/token/refresh",
+    status_code=status.HTTP_201_CREATED,
+    responses=get_response_models(401),
+    response_model=Token,
+)
+async def refresh_access_token(refresh_token: str):
+    username = security.verify_refresh_token(refresh_token)
+
+    if not username:
+        raise exceptions.INVALID_REFRESH_TOKEN
+
+    access_token = security.create_access_token({"sub": username})
+    return Token(
+        access_token=access_token,
+        refresh_token=refresh_token,
+        token_type="bearer",
     )

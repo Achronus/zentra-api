@@ -2,14 +2,12 @@ import secrets
 from typing import Annotated
 import typer
 
-from zentra_api.auth.enums import DeploymentType
-
 from zentra_api.cli.commands.add import AddRoutes
 from zentra_api.cli.commands.build import Build
 from zentra_api.cli.commands.setup import Setup
 
 from zentra_api.cli.constants import console
-from zentra_api.cli.constants.enums import RouteOptions
+from zentra_api.cli.constants.enums import RouteOptions, DeploymentType
 from zentra_api.cli.constants.message import MSG_MAPPER, MessageHandler
 from zentra_api.validation import SingleWord
 

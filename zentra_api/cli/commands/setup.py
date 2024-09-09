@@ -120,7 +120,8 @@ class SetupTasks:
     def _update_env(self) -> None:
         """Updates an environment files value's given a set of key-value pairs."""
         pairs = {
-            "AUTH__SECRET_KEY": secrets.token_urlsafe(32),
+            "AUTH__SECRET_ACCESS_KEY": secrets.token_urlsafe(32),
+            "AUTH__SECRET_REFRESH_KEY": secrets.token_urlsafe(32),
             "DB__FIRST_SUPERUSER_PASSWORD": secrets.token_urlsafe(16),
             "PROJECT_NAME": self.project_details.project_name,
             "STACK_NAME": f"{self.project_details.project_name}-stack",
