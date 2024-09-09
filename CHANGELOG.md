@@ -2,6 +2,22 @@
 
 All notable changes to this project will be documented in this file.
 
+## [0.1.13] - 2024-09-09
+
+### 🚀 Features
+
+- *(add-route)* Added set name handling using `inflect`.
+- *(auth)* Added refresh tokens to auth routes.
+
+### 🚜 Refactor
+
+- *(tests)* Refactored test names for `TestSetup` to simplify.
+- *(add)* Replaced `add` command with `add-route`.
+
+### 🧪 Testing
+
+- *(auth)* Updated failing tests based on new `auth` changes.
+
 ## [0.1.12] - 2024-08-29
 
 ### 🐛 Bug Fixes
