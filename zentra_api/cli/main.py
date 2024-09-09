@@ -2,12 +2,12 @@ import secrets
 from typing import Annotated
 import typer
 
-from zentra_api.cli.commands.add import AddRoutes
+from zentra_api.cli.commands.add import AddRoute, AddSetOfRoutes
 from zentra_api.cli.commands.build import Build
 from zentra_api.cli.commands.setup import Setup
 
 from zentra_api.cli.constants import console
-from zentra_api.cli.constants.enums import RouteOptions, DeploymentType
+from zentra_api.cli.constants.enums import RouteMethods, RouteOptions, DeploymentType
 from zentra_api.cli.constants.message import MSG_MAPPER, MessageHandler
 from zentra_api.validation import SingleWord
 
@@ -55,8 +55,8 @@ def init(
         msg_handler.msg(e)
 
 
-@app.command("add-route")
-def add(
+@app.command("add-routeset")
+def add_routeset(
     name: Annotated[
         str,
         typer.Argument(
@@ -75,8 +75,35 @@ def add(
     try:
         SingleWord(value=name)
 
-        routes = AddRoutes(name=name, option=option)
+        routes = AddSetOfRoutes(name=name, option=option)
         routes.build()
+
+    except typer.Exit as e:
+        msg_handler.msg(e)
+
+
+@app.command("add-route")
+def add_route(
+    name: Annotated[
+        str,
+        typer.Argument(
+            help="The name of the route to add. Must be a single word that only contains letters (a-zA-Z).",
+            show_default=False,
+        ),
+    ],
+    route_type: Annotated[
+        RouteMethods,
+        typer.Argument(
+            help="The type of route to add.",
+        ),
+    ],
+) -> None:
+    """Adds a new <ROUTE_TYPE> route to the project dynamically based on the <NAME>."""
+    try:
+        SingleWord(value=name)
+
+        route = AddRoute(name=name, route_type=route_type)
+        route.build()
 
     except typer.Exit as e:
         msg_handler.msg(e)
