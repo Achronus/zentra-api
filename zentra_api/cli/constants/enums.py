@@ -15,10 +15,6 @@ class RouteOptions(StrEnum):
     CREATE_READ_DELETE = "crd"
     CREATE_UPDATE_DELETE = "cud"
     READ_UPDATE_DELETE = "rud"
-    CREATE = "c"
-    READ = "r"
-    UPDATE = "u"
-    DELETE = "d"
 
 
 class RouteMethods(StrEnum):
@@ -29,6 +25,16 @@ class RouteMethods(StrEnum):
     PUT = "put"
     PATCH = "patch"
     DELETE = "delete"
+
+
+class RouteMethodType(StrEnum):
+    """Human readable variants of HTTP methods."""
+
+    GET = "Get"
+    POST = "Create"
+    PUT = "Update"
+    PATCH = "Update"
+    DELETE = "Delete"
 
 
 class DeploymentType(StrEnum):
