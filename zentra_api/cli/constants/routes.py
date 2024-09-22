@@ -1,6 +1,11 @@
 from typing import Any, Literal
 
-from zentra_api.cli.constants.enums import RouteMethodType, RouteMethods
+from zentra_api.cli.constants.enums import (
+    RouteMethodType,
+    RouteMethods,
+    RouteParameters,
+    RouteResponseCodes,
+)
 
 from pydantic import BaseModel, ConfigDict, PrivateAttr
 
@@ -23,6 +28,62 @@ class Name(BaseModel):
     plural: str
 
 
+class RouteDefaultDetails(BaseModel):
+    """A helper model for retrieving default route details."""
+
+    method: RouteMethods
+    multi: bool
+    name: str
+    schema_model: str
+    auth: bool
+
+    _response_codes = PrivateAttr(None)
+    _parameters = PrivateAttr(None)
+
+    @property
+    def response_codes(self) -> list[int]:
+        """The response codes for the route."""
+        return self._response_codes
+
+    @property
+    def parameters(self) -> list[tuple[str, str]]:
+        """The parameters for the route."""
+        return self._parameters
+
+    def model_post_init(self, __context: Any) -> None:
+        self._response_codes = self.set_response_codes()
+        self._parameters = self.set_parameters()
+
+    def set_response_codes(self) -> list[int]:
+        """Sets the response codes for the route."""
+        codes = []
+
+        if self.auth:
+            codes.extend(RouteResponseCodes.AUTH.value)
+
+        if self.method in RouteMethods.values(ignore=["get"]):
+            codes.extend(RouteResponseCodes.BAD_REQUEST.value)
+
+        return codes
+
+    def set_parameters(self) -> list[tuple[str, str]]:
+        """Sets the parameters for the route."""
+        params = []
+
+        if self.method in RouteMethods.values(ignore=["post"]) and not self.multi:
+            params.append(RouteParameters.ID.value)
+
+        if self.method in RouteMethods.values(ignore=["get", "delete"]):
+            params.append((self.name, self.schema_model))
+
+        params.append(RouteParameters.DB_DEPEND.value)
+
+        if self.auth:
+            params.append(RouteParameters.AUTH_DEPEND.value)
+
+        return params
+
+
 class Route(BaseModel):
     """A model representation of a route."""
 
@@ -34,46 +95,54 @@ class Route(BaseModel):
     parameters: list[tuple[str, str]] = []
     content: str | None = None
     multi: bool = False
+    auth: bool = True
 
     _func_name = PrivateAttr(None)
     _response_model = PrivateAttr(None)
-    _input_model = PrivateAttr(None)
+    _schema_model = PrivateAttr(None)
 
     model_config = ConfigDict(use_enum_values=True)
 
     def model_post_init(self, __context: Any) -> None:
         self._func_name = f"{self.method.lower()}_{self.name.lower()}"
-        self._response_model = self.get_response_model()
-        self._input_model = self.get_input_model()
+        self._response_model = self.set_response_model()
+        self._schema_model = self.set_schema_model()
 
-        self.add_default_params()
+        details = RouteDefaultDetails(
+            method=self.method,
+            multi=self.multi,
+            name=self.name,
+            schema_model=self._schema_model,
+            auth=self.auth,
+        )
+
+        self.parameters = list(set(self.parameters).union(set(details.parameters)))
+        self.response_codes = list(
+            set(self.response_codes).union(set(details.response_codes))
+        )
 
     @property
     def func_name(self) -> str:
+        """The function name for the route."""
         return self._func_name
 
     @property
     def response_model(self) -> str:
+        """The response model name for the route."""
         return self._response_model
 
     @property
-    def input_model(self) -> str:
-        return self._input_model
+    def schema_model(self) -> str:
+        """The schema model name for the route."""
+        return self._schema_model
 
-    def add_default_params(self) -> None:
-        """Adds default parameters depending on the method type."""
-        if self.method in [RouteMethods.PUT, RouteMethods.PATCH, RouteMethods.DELETE]:
-            self.parameters.append(("id", "int"))
-
-        if self.method in [RouteMethods.POST, RouteMethods.PATCH, RouteMethods.PUT]:
-            self.parameters.append((self.name, self.input_model))
-
-    def get_response_model(self) -> str:
-        """A utility function for creating response model names.
+    def set_response_model(self) -> str:
+        """Creates the response model name.
 
         Examples:
         ```python
             response_model_name("get", "products")  # GetProductsResponse
+            response_model_name("get", "product")  # GetProductResponse
             response_model_name("post", "product")  # CreateProductResponse
             response_model_name("put", "product")  # UpdateProductResponse
             response_model_name("patch", "product")  # UpdateProductResponse
@@ -84,8 +153,8 @@ class Route(BaseModel):
         name = self.name.title()
         return f"{method}{name}Response"
 
-    def get_input_model(self) -> str:
-        """A utility function for creating input model names."""
+    def set_schema_model(self) -> str:
+        """Creates the schema model (parameter) name."""
         method = RouteMethodType[self.method.upper()]
         name = self.name.title()
         return f"{name}{method}"
@@ -99,6 +168,7 @@ class Route(BaseModel):
 
     @staticmethod
     def indent(line: str, spaces: int = 4) -> str:
+        """Indents a line of text."""
         return " " * spaces + line
 
     def to_str(self) -> str:
@@ -125,7 +195,15 @@ class Route(BaseModel):
 
 
 def route_dict_set(name: Name) -> dict[str, Route]:
-    """Creates a dictionary for a set of routes given a `Name` model."""
+    """
+    Creates a dictionary for a set of routes.
+
+    Parameters:
+        name (Name): The name of the route.
+
+    Returns:
+        dict[str, Route]: A dictionary of routes.
+    """
     return {
         "r1": Route(
             name=name.plural,
@@ -145,20 +223,17 @@ def route_dict_set(name: Name) -> dict[str, Route]:
             method="post",
             route="",
             status_code=201,
-            response_codes=[400],
         ),
         "u": Route(
             name=name.singular,
             method="put",
             route="/{id}",
             status_code=202,
-            response_codes=[400, 401],
         ),
         "d": Route(
             name=name.singular,
             method="delete",
             route="/{id}",
             status_code=202,
-            response_codes=[400, 401],
         ),
     }

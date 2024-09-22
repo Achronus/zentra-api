@@ -32,10 +32,10 @@ class MessageResponse(BaseResponse):
 
     Parameters:
         message (str): The reason the response occurred.
-        headers (dict[str, str] | None, optional): The headers to send with the response.
+        headers (dict[str, str] | None): The headers to send with the response (optional).
 
     Returns:
-        MessageResponse: An instance of the `MessageResponse` class.
+        MessageResponse: An instance of the MessageResponse class.
     """
 
     message: str = Field(..., description="The reason the response occured.")
@@ -49,11 +49,12 @@ class ErrorResponse(MessageResponse):
     An error response model. Intended for client responses.
 
     Parameters:
+        code (int): The HTTP response code.
         message (str): The reason the error response occurred.
-        headers (dict[str, str] | None, optional): The headers to send with the response.
+        headers (dict[str, str] | None): The headers to send with the response (optional).
 
     Returns:
-        ErrorResponse: An instance of the `ErrorResponse` class.
+        ErrorResponse: An instance of the ErrorResponse class.
     """
 
     status: str = Field(
@@ -68,11 +69,12 @@ class SuccessMsgResponse(MessageResponse):
     A success response model. Intended for client responses. Provides a message instead of data.
 
     Parameters:
+        code (int): The HTTP response code.
         message (str): The reason for the success response.
-        headers (dict[str, str] | None, optional): The headers to send with the response.
+        headers (dict[str, str] | None): The headers to send with the response (optional).
 
     Returns:
-        SuccessMsgResponse: An instance of the `SuccessMsgResponse` class.
+        SuccessMsgResponse: An instance of the SuccessMsgResponse class.
     """
 
     status: str = Field(
@@ -88,11 +90,11 @@ class SuccessResponse(BaseSuccessResponse, Generic[T]):
     Uses generics to change the data model.
 
     Parameters:
-        data (T): The response data model, where `T` is a subclass of `pydantic.BaseModel`.
-        headers (dict[str, str] | None, optional): The headers to send with the response.
+        data (T): The response data model, where T is a subclass of pydantic.BaseModel.
+        headers (dict[str, str] | None): The headers to send with the response (optional).
 
     Returns:
-        SuccessResponse[T]: An instance of the `SuccessResponse` class with the specified data type `T`.
+        SuccessResponse[T]: An instance of the SuccessResponse class with the specified data type T.
 
     Example:
     ```python

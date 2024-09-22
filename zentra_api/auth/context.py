@@ -11,7 +11,7 @@ class BcryptContext(BaseModel):
     A custom context for bcrypt hashing.
 
     Parameters:
-        rounds (integer, optional): the computational cost factor for hashing. Defaults to 12.
+        rounds (integer): the computational cost factor for hashing. Defaults to 12 (optional).
     """
 
     rounds: int = 12

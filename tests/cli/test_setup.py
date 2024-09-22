@@ -32,13 +32,7 @@ class TestSetup:
         def test_does_not_exist(setup: Setup):
             assert not setup.project_exists()
 
-    class TestFastAPIBuild:
-        @pytest.fixture
-        def setup(self) -> Setup:
-            return Setup(
-                "test_project",
-            )
-
+    class TestBuild:
         @mock.patch.object(Setup, "project_exists", return_value=False)
         @mock.patch.object(
             SetupTasks,
