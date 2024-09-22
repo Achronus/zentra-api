@@ -6,7 +6,8 @@ from zentra_api.cli.commands.add import AddRoute, AddSetOfRoutes
 from zentra_api.cli.commands.build import Build
 from zentra_api.cli.commands.setup import Setup
 
-from zentra_api.cli.constants import console
+from zentra_api.cli.conf.checks import zentra_config_path
+from zentra_api.cli.constants import CommonErrorCodes, console
 from zentra_api.cli.constants.enums import RouteMethods, RouteOptions, DeploymentType
 from zentra_api.cli.constants.message import MSG_MAPPER, MessageHandler
 from zentra_api.validation import SingleWord
@@ -73,6 +74,9 @@ def add_routeset(
 ) -> None:
     """Adds a new set of routes based on <OPTION> into the project in a folder called <NAME>."""
     try:
+        if not zentra_config_path():
+            raise typer.Exit(code=CommonErrorCodes.PROJECT_NOT_FOUND)
+
         SingleWord(value=name)
 
         routes = AddSetOfRoutes(name=name, option=option)
@@ -100,6 +104,9 @@ def add_route(
 ) -> None:
     """Adds a new <ROUTE_TYPE> route to the project dynamically based on the <NAME>."""
     try:
+        if not zentra_config_path().exists():
+            raise typer.Exit(code=CommonErrorCodes.PROJECT_NOT_FOUND)
+
         SingleWord(value=name)
 
         route = AddRoute(name=name, route_type=route_type)

@@ -1,8 +1,18 @@
-import inflect
+import json
+import os
+from typing import Callable
+from pathlib import Path
 
+from zentra_api.cli.conf.checks import zentra_config_path
+from zentra_api.cli.constants import Import, RouteErrorCodes, RouteSuccessCodes
 from zentra_api.cli.builder.routes import RouteBuilder
-from zentra_api.cli.constants.enums import RouteMethods, RouteOptions
-from zentra_api.cli.constants.routes import Name, Route, route_dict_set
+from zentra_api.cli.constants.enums import RouteFile, RouteMethods, RouteOptions
+from zentra_api.cli.constants.routes import Name, Route, route_dict_set, route_imports
+from zentra_api.cli.constants.models import Config, Imports
+
+import inflect
+import typer
+from rich.progress import track
 
 
 def store_name(name: str) -> Name:
@@ -24,36 +34,62 @@ def store_name(name: str) -> Name:
 
 
 def create_api_router(name: str) -> str:
-    """Creates a string representation of an APIRouter."""
-    return f'router = APIRouter(prefix="/{name}", tags=["{name}"])'
+    """
+    Creates a string representation of an APIRouter.
+
+    Parameters:
+        name (str): The name of the route set.
+
+    Returns:
+        str: The string representation of the APIRouter.
+    """
+    return f'router = APIRouter(prefix="/{name.lower()}", tags=["{name.capitalize()}"])'
+
+
+def get_route_folder(name: Name, root: Path) -> Path:
+    """
+    Retrieves the path to the route folder.
+
+    Parameters:
+        name (Name): The name of the route set.
+        root (Path): The root directory of the project.
+
+    Returns:
+        Path: The path to the route folder.
+    """
+    return Path(root, "app", "api", name.plural)
 
 
 class AddSetOfRoutes:
-    """Performs project operations for the `add-routeset` command."""
+    """
+    Performs project operations for the `add-routeset` command.
 
-    def __init__(self, name: str, option: RouteOptions) -> None:
+    Parameters:
+        name (str): The name of the route set.
+        option (RouteOptions): The type of route set to create.
+        root (Path): The root directory of the project. Defaults to the parent of the config file. (optional)
+    """
+
+    def __init__(self, name: str, option: RouteOptions, root: Path = None) -> None:
         self.name = store_name(name.lower().strip())
-        self.option = option
+        self.root = root if root else zentra_config_path().parent
+        self.route_tasks = AddRouteTasks(name=self.name, root=self.root, option=option)
 
-        self.route_map = route_dict_set(self.name)
-
-    def get_routes(self) -> list[Route]:
-        """Retrieves the routes from the route map."""
-        routes = []
-
-        for key, route in self.route_map.items():
-            for letter in self.option:
-                if letter in key:
-                    routes.append(route)
-
-        return routes
+    def check_folder_exists(self) -> bool:
+        """Checks if the folder name exists in the API directory."""
+        return get_route_folder(self.name, self.root).exists()
 
     def build(self) -> None:
         """Build a set of API routes as models."""
-        routes = self.get_routes()
+        if self.check_folder_exists():
+            raise typer.Exit(code=RouteErrorCodes.FOLDER_EXISTS)
 
-        for route in routes:
-            print(route.to_str())
+        tasks = self.route_tasks.get_tasks_for_set()
+
+        for task in track(tasks, description="Building..."):
+            task()
+
+        raise typer.Exit(code=RouteSuccessCodes.CREATED)
 
 
 class AddRoute:
@@ -94,4 +130,105 @@ class AddRoute:
 
     def build(self) -> None:
         """Builds the route."""
+        pass
+
+
+class AddRouteTasks:
+    """Contains the tasks for the `add-routeset` and `add-route` commands."""
+
+    def __init__(self, name: Name, root: Path, option: RouteOptions) -> None:
+        self.name = name
+        self.root = root
+        self.option = option
+
+        self.config: Config = Config(**json.loads(zentra_config_path().read_text()))
+        self.route_map = route_dict_set(self.name)
+        self.api_route_str = create_api_router(self.name.plural)
+        self.route_path = get_route_folder(self.name, self.root)
+
+        self.init_content = None
+
+    def _get_routes(self) -> list[Route]:
+        """Retrieves the routes from the route map."""
+        routes = []
+
+        for key, route in self.route_map.items():
+            for letter in self.option:
+                if letter in key:
+                    routes.append(route)
+
+        return routes
+
+    def _create_init_content(self, routes: list[Route]) -> None:
+        """Creates the '__init__.py' file content."""
+        response_models = [
+            route.response_model for route in routes if route.response_model
+        ]
+        schema_models = [route.schema_model for route in routes if route.schema_model]
+        add_auth = any([route.auth for route in routes])
+
+        folder_imports = [
+            Import(
+                root=".",
+                modules=[RouteFile.RESPONSES.value.split(".")[0]],
+                items=response_models,
+                add_dot=False,
+            ),
+            Import(
+                root=".",
+                modules=[RouteFile.SCHEMA.value.split(".")[0]],
+                items=schema_models,
+                add_dot=False,
+            ),
+        ]
+        file_imports: list[list[Import]] = route_imports(add_auth=add_auth)
+        file_imports.insert(1, folder_imports)
+        file_imports = Imports(items=file_imports).to_str()
+
+        self.init_content = "\n".join(
+            [
+                file_imports,
+                "",
+                self.api_route_str,
+                "\n",
+                "\n".join([route.to_str() + "\n\n" for route in routes]),
+            ]
+        )
+
+    def _update_files(self) -> None:
+        """Updates the '__init__.py', 'schema.py', and 'responses.py' files."""
+        init_file = Path(self.route_path, RouteFile.INIT.value)
+        init_file.write_text(self.init_content)
+
+    def _update_schema_file(self) -> None:
+        """Updates the 'schema.py' file."""
+        pass
+
+    def _update_responses_file(self) -> None:
+        """Updates the 'responses.py' file."""
+        pass
+
+    def _create_route_files(self) -> None:
+        """Creates a new set of route files."""
+        os.makedirs(self.route_path, exist_ok=True)
+
+        for file in RouteFile.values():
+            open(Path(self.route_path, file), "w").close()
+
+    def get_tasks_for_set(self) -> list[Callable]:
+        """Retrieves the tasks for the `add-routeset` command."""
+        tasks = []
+
+        if not self.route_path.exists():
+            tasks.append(self._create_route_files)
+
+        routes = self._get_routes()
+        self._create_init_content(routes)
+
+        tasks.extend([self._update_files])
+
+        return tasks
+
+    def get_tasks_for_route(self) -> list[Callable]:
+        """Retrieves the tasks for the `add-route` command."""
         pass

@@ -1,5 +1,6 @@
 from enum import Enum
 import importlib.resources as pkg_resources
+from pydantic import BaseModel
 from rich.console import Console
 
 from zentra_api.utils.package import package_path
@@ -59,6 +60,14 @@ class CommonErrorCodes(Enum):
     UNKNOWN_ERROR = 1000
 
 
+class RouteSuccessCodes(Enum):
+    CREATED = 30
+
+
+class RouteErrorCodes(Enum):
+    FOLDER_EXISTS = 40
+
+
 class BuildDetails:
     """A storage container for project build details."""
 
@@ -109,3 +118,61 @@ FASTAPI_DETAILS = BuildDetails(
         "pytest-cov",
     ],
 )
+
+
+class Import(BaseModel):
+    """A model for imports."""
+
+    root: str
+    modules: list[str] | None = None
+    items: list[str]
+    add_dot: bool = True
+
+    def to_str(self) -> str:
+        """Converts the import to a string."""
+        return f"from {self.root}{'.' if self.add_dot else ''}{'.'.join(self.modules) if self.modules else ''} import {", ".join(self.items)}"
+
+
+BASE_IMPORTS = [
+    Import(
+        root="app",
+        modules=["core", "dependencies"],
+        items=["DB_DEPEND"],
+    ),
+    Import(
+        root="app",
+        modules=["db_models"],
+        items=["CONNECT"],
+    ),
+]
+
+AUTH_IMPORTS = [
+    Import(
+        root="app",
+        modules=["auth"],
+        items=["ACTIVE_USER_DEPEND"],
+    )
+]
+
+ZENTRA_IMPORTS = [
+    Import(
+        root="zentra_api",
+        modules=["responses"],
+        items=["SuccessMsgResponse", "get_response_models"],
+    )
+]
+
+FASTAPI_IMPORTS = [
+    Import(
+        root="fastapi",
+        items=["APIRouter", "HTTPException", "status"],
+        add_dot=False,
+    )
+]
+
+
+class RouteImports(Enum):
+    BASE = BASE_IMPORTS
+    AUTH = AUTH_IMPORTS
+    ZENTRA = ZENTRA_IMPORTS
+    FASTAPI = FASTAPI_IMPORTS

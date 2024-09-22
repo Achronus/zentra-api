@@ -1,5 +1,6 @@
 from typing import Any, Literal
 
+from zentra_api.cli.constants import RouteImports, Import
 from zentra_api.cli.constants.enums import (
     RouteMethodType,
     RouteMethods,
@@ -34,7 +35,7 @@ class RouteDefaultDetails(BaseModel):
     method: RouteMethods
     multi: bool
     name: str
-    schema_model: str
+    schema_model: str | None
     auth: bool
 
     _response_codes = PrivateAttr(None)
@@ -73,7 +74,7 @@ class RouteDefaultDetails(BaseModel):
         if self.method in RouteMethods.values(ignore=["post"]) and not self.multi:
             params.append(RouteParameters.ID.value)
 
-        if self.method in RouteMethods.values(ignore=["get", "delete"]):
+        if self.schema_model:
             params.append((self.name, self.schema_model))
 
         params.append(RouteParameters.DB_DEPEND.value)
@@ -93,7 +94,7 @@ class Route(BaseModel):
     status_code: StatusCodeLiteral
     response_codes: list[int] = []
     parameters: list[tuple[str, str]] = []
-    content: str | None = None
+    content: str | None = "pass"
     multi: bool = False
     auth: bool = True
 
@@ -146,15 +147,20 @@ class Route(BaseModel):
             response_model_name("post", "product")  # CreateProductResponse
             response_model_name("put", "product")  # UpdateProductResponse
             response_model_name("patch", "product")  # UpdateProductResponse
-            response_model_name("delete", "product")  # DeleteProductResponse
         ```
         """
+        if self.method == "delete":
+            return None
+
         method = RouteMethodType[self.method.upper()]
         name = self.name.title()
         return f"{method}{name}Response"
 
-    def set_schema_model(self) -> str:
+    def set_schema_model(self) -> str | None:
         """Creates the schema model (parameter) name."""
+        if self.method in ["get", "delete"]:
+            return None
+
         method = RouteMethodType[self.method.upper()]
         name = self.name.title()
         return f"{name}{method}"
@@ -190,6 +196,7 @@ class Route(BaseModel):
             self.indent(f"response_model={self.response_model},"),
             ")",
             f"async def {self.func_name}({self.params_to_str()}):",
+            self.indent(self.content),
         ]
         return "\n".join(text)
 
@@ -237,3 +244,21 @@ def route_dict_set(name: Name) -> dict[str, Route]:
             status_code=202,
         ),
     }
+
+
+def route_imports(add_auth: bool = True) -> list[list[Import]]:
+    """
+    Creates the route imports for a set of routes.
+
+    Parameters:
+        add_auth (bool): A flag to add authentation imports. True by default.
+
+    Returns:
+        list[list[Import]]: A list of route imports.
+    """
+    base = RouteImports.BASE.value
+
+    if add_auth:
+        base.extend(RouteImports.AUTH.value)
+
+    return [base, RouteImports.ZENTRA.value, RouteImports.FASTAPI.value]
