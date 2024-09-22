@@ -1,6 +1,6 @@
 import pytest
 from pydantic import ValidationError
-from zentra_api.validation import EnvFilename
+from zentra_api.validation import EnvFilename, SingleWord
 
 
 class TestEnvFilename:
@@ -31,3 +31,21 @@ class TestEnvFilename:
         for filename in invalid_filenames:
             with pytest.raises(ValidationError):
                 EnvFilename(name=filename)
+
+
+class TestSingleWord:
+    @staticmethod
+    def test_valid_word():
+        valid_words = ["hello", "world", "foo", "bar"]
+
+        for word in valid_words:
+            single_word = SingleWord(value=word)
+            assert single_word.value == word
+
+    @staticmethod
+    def test_invalid_word():
+        invalid_words = ["hello world", "foo bar", "foo-bar", "foo_bar"]
+
+        for word in invalid_words:
+            with pytest.raises(ValidationError):
+                SingleWord(value=word)
