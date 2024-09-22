@@ -1,3 +1,8 @@
+"""
+Custom [Pydantic](https://docs.pydantic.dev/latest/) models used
+throughout the Zentra API package.
+"""
+
 from typing import Literal
 from pydantic import BaseModel, ConfigDict
 
@@ -9,7 +14,7 @@ class Token(BaseModel):
     Parameters:
         access_token (string): a JWT access token
         refresh_token (string): a JWT refresh token
-        token_type (Literal[string]): the token type. Valid options: `['bearer', 'api_key', 'oauth_access', 'oauth_refresh']`
+        token_type (['bearer', 'api_key', 'oauth_access', 'oauth_refresh']): the token type.
     """
 
     access_token: str

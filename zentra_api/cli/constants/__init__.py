@@ -12,13 +12,18 @@ DOCS_URL = "https://zentra.achronus.dev"
 GITHUB_ROOT = "https://github.com/Achronus/zentra"
 GITHUB_ISSUES_URL = f"{GITHUB_ROOT}/issues"
 
-GETTING_STARTED_URL = f"{DOCS_URL}/starting/api/"
+GETTING_STARTED_URL = f"{DOCS_URL}/api/"
 ERROR_GUIDE_URL = f"{DOCS_URL}/help/errors/"
+API_REFERENCE_URL = f"{DOCS_URL}/api/reference/"
 
 PKG_DIR = pkg_resources.files("zentra_api")
 LOG_FOLDER = PKG_DIR.joinpath("logs")
 
 ROOT_COMMAND = "zentra-api"
+
+# Used in 'zentra_api.responses.get_response_models()'
+RESPONSE_ROOT_PATH = "zentra_api.responses"
+RESPONSE_MODEL_DIR = "models"
 
 # Custom print emoji's
 PASS = "[green]\u2713[/green]"
