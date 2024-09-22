@@ -5,6 +5,7 @@ import shutil
 import subprocess
 from typing import Callable
 import typer
+import json
 
 from zentra_api.cli.builder.poetry import PoetryFileBuilder
 from zentra_api.cli.conf import ProjectDetails
@@ -143,6 +144,12 @@ class SetupTasks:
         with open(env_path, "w") as f:
             f.writelines(updated_file)
 
+    def _create_config(self) -> None:
+        """Creates the `zentra.config.json` file."""
+        zentra_config = Path(self.project_details.project_path, "zentra.config.json")
+        with open(zentra_config, "w") as f:
+            json.dump({"project_name": self.project_details.project_name}, f)
+
     def get_tasks(self, no_output: bool = False) -> list[Callable]:
         """Gets the tasks to run as a list of methods."""
         os.makedirs(self.project_details.project_path, exist_ok=True)
@@ -161,4 +168,5 @@ class SetupTasks:
             self._make_toml,
             self._move_assets,
             self._update_env,
+            self._create_config,
         ]

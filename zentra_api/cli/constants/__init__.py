@@ -97,6 +97,7 @@ FASTAPI_DETAILS = BuildDetails(
         "pydantic-settings",
         "pyjwt",
         "bcrypt",
+        "zentra-api",
     ],
     dev_packages=[
         "pytest",

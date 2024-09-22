@@ -6,7 +6,7 @@ from zentra_api.cli.conf import ProjectDetails
 from zentra_api.cli.conf.checks import (
     check_file_exists,
     check_folder_exists,
-    zentra_root_path,
+    zentra_config_path,
 )
 
 
@@ -82,20 +82,20 @@ class TestZentraRootPath:
         os.chdir(self.original_cwd)
 
     def test_found_in_current_dir(self, tmp_path):
-        zentra_root = tmp_path / "zentra.root"
+        zentra_root = tmp_path / "zentra.config.json"
         zentra_root.touch()
-        assert "zentra.root" in zentra_root_path().parts
+        assert "zentra.config.json" in zentra_config_path().parts
 
     def test_found_in_parent_dir(self, tmp_path):
         project_dir = tmp_path / "project"
         subdir = project_dir / "subdir"
         subdir.mkdir(parents=True)
 
-        zentra_root = project_dir / "zentra.root"
+        zentra_root = project_dir / "zentra.config.json"
         zentra_root.touch()
         os.chdir(subdir)
 
-        assert "zentra.root" in zentra_root_path().parts
+        assert "zentra.config.json" in zentra_config_path().parts
 
     def test_not_found(self, tmp_path):
         project_dir = tmp_path / "project"
@@ -104,4 +104,4 @@ class TestZentraRootPath:
 
         os.chdir(subdir)
 
-        assert zentra_root_path() is None
+        assert zentra_config_path() is None

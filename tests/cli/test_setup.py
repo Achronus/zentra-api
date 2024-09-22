@@ -2,7 +2,7 @@ import pytest
 from unittest import mock
 import subprocess
 from pathlib import Path
-
+import json
 import toml
 import typer
 
@@ -140,7 +140,8 @@ class TestSetupTasks:
             content = f.readlines()
 
         pairs = [
-            ("AUTH__SECRET_KEY", key_length(32)),
+            ("AUTH__SECRET_ACCESS_KEY", key_length(32)),
+            ("AUTH__SECRET_REFRESH_KEY", key_length(32)),
             ("DB__FIRST_SUPERUSER_PASSWORD", key_length(16)),
             ("PROJECT_NAME", setup_tasks.project_details.project_name),
             ("STACK_NAME", f"{setup_tasks.project_details.project_name}-stack"),
@@ -159,12 +160,28 @@ class TestSetupTasks:
 
         assert all(checks)
 
+    def test_create_config(self, setup_tasks: SetupTasks):
+        config_path = Path(
+            setup_tasks.project_details.project_path, "zentra.config.json"
+        )
+        config_path.parent.mkdir(parents=True, exist_ok=True)
+
+        setup_tasks._move_assets()
+        setup_tasks._create_config()
+
+        with open(config_path, "r") as f:
+            content = json.load(f)
+
+        target = {"project_name": setup_tasks.project_details.project_name}
+        assert content == target
+
     def test_get_tasks(self, setup_tasks: SetupTasks):
         tasks = setup_tasks.get_tasks()
 
-        assert len(tasks) == 3
+        assert len(tasks) == 4
         assert [
             setup_tasks._make_toml,
             setup_tasks._move_assets,
             setup_tasks._update_env,
+            setup_tasks._create_config,
         ]
