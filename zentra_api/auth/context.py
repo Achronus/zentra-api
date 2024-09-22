@@ -1,13 +1,17 @@
+"""
+Custom hashing contexts for Zentra API projects.
+"""
+
 import bcrypt
 from pydantic import BaseModel
 
 
 class BcryptContext(BaseModel):
     """
-    A custom context for `bcrypt` hashing.
+    A custom context for bcrypt hashing.
 
     Parameters:
-        rounds (integer, optional): the computational cost factor for hashing. `12` by default
+        rounds (integer, optional): the computational cost factor for hashing. Defaults to 12.
     """
 
     rounds: int = 12
@@ -25,7 +29,7 @@ class BcryptContext(BaseModel):
 
     def verify(self, password: str, hashed_password: str) -> bool:
         """
-        Verifies a password against a given hash. Returns `True` if the password matches, `False` otherwise.
+        Verifies a password against a given hash. Returns True if the password matches, False otherwise.
 
         Parameters:
             password (string): the plain password to verify
