@@ -1,6 +1,7 @@
+import textwrap
 from typing import Any, Literal
 
-from zentra_api.cli.constants import RouteImports, Import
+from zentra_api.cli.constants import SUCCESS_MSG_RESPONSE_MODEL, RouteImports, Import
 from zentra_api.cli.constants.enums import (
     RouteMethodType,
     RouteMethods,
@@ -9,6 +10,8 @@ from zentra_api.cli.constants.enums import (
 )
 
 from pydantic import BaseModel, ConfigDict, PrivateAttr
+
+from zentra_api.cli.utils import indent
 
 
 status_codes = {
@@ -94,7 +97,6 @@ class Route(BaseModel):
     status_code: StatusCodeLiteral
     response_codes: list[int] = []
     parameters: list[tuple[str, str]] = []
-    content: str | None = "pass"
     multi: bool = False
     auth: bool = True
 
@@ -105,7 +107,7 @@ class Route(BaseModel):
     model_config = ConfigDict(use_enum_values=True)
 
     def model_post_init(self, __context: Any) -> None:
-        self._func_name = f"{self.method.lower()}_{self.name.lower()}"
+        self._func_name = f"{self.func_name_start()}_{self.name.lower()}"
         self._response_model = self.set_response_model()
         self._schema_model = self.set_schema_model()
 
@@ -117,7 +119,9 @@ class Route(BaseModel):
             auth=self.auth,
         )
 
-        self.parameters = list(set(self.parameters).union(set(details.parameters)))
+        self.parameters += [
+            param for param in details.parameters if param not in self.parameters
+        ]  # Keep parameter order
         self.response_codes = list(
             set(self.response_codes).union(set(details.response_codes))
         )
@@ -137,6 +141,23 @@ class Route(BaseModel):
         """The schema model name for the route."""
         return self._schema_model
 
+    def func_name_start(self) -> str:
+        """
+        Sets the start of the function name based on self.method.
+
+        Example:
+            `self.method == "get"` => `get`
+            `self.method == "post"` => `create`
+            `self.method == "put" | "patch"` => `update`
+            `self.method == "delete"` => `delete`
+        """
+        if self.method == RouteMethods.POST:
+            return "create"
+        elif self.method == RouteMethods.PUT or self.method == RouteMethods.PATCH:
+            return "update"
+
+        return self.method.lower()
+
     def set_response_model(self) -> str:
         """Creates the response model name.
 
@@ -149,8 +170,8 @@ class Route(BaseModel):
             response_model_name("patch", "product")  # UpdateProductResponse
         ```
         """
-        if self.method == "delete":
-            return None
+        if self.method == RouteMethods.DELETE:
+            return SUCCESS_MSG_RESPONSE_MODEL
 
         method = RouteMethodType[self.method.upper()]
         name = self.name.title()
@@ -158,7 +179,7 @@ class Route(BaseModel):
 
     def set_schema_model(self) -> str | None:
         """Creates the schema model (parameter) name."""
-        if self.method in ["get", "delete"]:
+        if self.method == RouteMethods.GET or self.method == RouteMethods.DELETE:
             return None
 
         method = RouteMethodType[self.method.upper()]
@@ -172,33 +193,28 @@ class Route(BaseModel):
 
         return ", ".join(f"{param[0]}: {param[1]}" for param in self.parameters)
 
-    @staticmethod
-    def indent(line: str, spaces: int = 4) -> str:
-        """Indents a line of text."""
-        return " " * spaces + line
-
-    def to_str(self) -> str:
+    def to_str(self, name: Name) -> str:
         """Converts the route to a string."""
         text = [
             f"@router.{self.method}(",
-            self.indent(f'"{self.route}",'),
-            self.indent(f"status_code=status.{status_codes[self.status_code]},"),
+            indent(f'"{self.route}",'),
+            indent(f"status_code=status.{status_codes[self.status_code]},"),
         ]
 
         if self.response_codes:
             text.append(
-                self.indent(
+                indent(
                     f"responses=get_response_models({self.response_codes}),",
                 )
             )
 
         text += [
-            self.indent(f"response_model={self.response_model},"),
+            indent(f"response_model={self.response_model},"),
             ")",
             f"async def {self.func_name}({self.params_to_str()}):",
-            self.indent(self.content),
+            route_content(name, self.method, self.multi, self.response_model),
         ]
-        return "\n".join(text)
+        return "\n".join(text).rstrip()
 
 
 def route_dict_set(name: Name) -> dict[str, Route]:
@@ -262,3 +278,90 @@ def route_imports(add_auth: bool = True) -> list[list[Import]]:
         base.extend(RouteImports.AUTH.value)
 
     return [base, RouteImports.ZENTRA.value, RouteImports.FASTAPI.value]
+
+
+def route_content(
+    name: Name, method: RouteMethods, multi: bool, response_model: str
+) -> str:
+    """
+    Creates the route content for a single route.
+
+    Parameters:
+        name (Name): The name model containing a single and multi variant of the routeset name.
+        method (RouteMethods): The type of route.
+        multi (bool): A flag to determine if the route returns a list of values.
+        response_model (str): The name of the response model.
+
+    Returns:
+        str: A string of route content.
+    """
+
+    def db_get_method(param: str | None = None) -> str:
+        """A utility method for retrieving the database get method."""
+        if multi:
+            return "get_multiple(db, skip=0, limit=10)"
+
+        if param:
+            return f"get(db, {param}.id)"
+
+        return "get(db, id)"
+
+    content = "pass"
+
+    out_name = name.plural if multi else name.singular
+    if method == RouteMethods.GET:
+        content = textwrap.dedent(f"""
+        {out_name} = CONNECT.{name.plural}.{db_get_method()}
+        
+        return {response_model}(
+            code=status.HTTP_200_OK,
+            data={out_name}.model_dump(),
+        )
+        """)
+    elif method == RouteMethods.POST:
+        content = textwrap.dedent(f"""
+        exists = CONNECT.{name.plural}.{db_get_method(name.singular)}
+
+        if exists:
+            raise HTTPException(
+                status.HTTP_400_BAD_REQUEST, detail="{name.singular.title()} already exists."
+            )
+
+        {out_name} = CONNECT.{name.plural}.create(db, {name.singular}.model_dump())
+        return {response_model}(
+            code=status.HTTP_201_CREATED,
+            data={name.singular}.model_dump(),
+        )
+        """)
+    elif method == RouteMethods.PATCH or method == RouteMethods.PUT:
+        content = textwrap.dedent(f"""
+        exists = CONNECT.{name.plural}.update(db, id, {name.singular}.model_dump())
+
+        if not exists:
+            raise HTTPException(
+                status.HTTP_400_BAD_REQUEST, detail="{name.singular.title()} does not exist."
+            )
+
+        {out_name} = CONNECT.{name.plural}.{db_get_method()}
+        return {response_model}(
+            code=status.HTTP_202_ACCEPTED,
+            data={out_name}.model_dump(),
+        )
+        """)
+    elif method == RouteMethods.DELETE:
+        content = textwrap.dedent(f"""
+        exists = CONNECT.{name.plural}.delete(db, id)
+
+        if not exists:
+            raise HTTPException(
+                status.HTTP_400_BAD_REQUEST, detail="{name.singular.title()} does not exist."
+            )
+
+        return SuccessMsgResponse(code=status.HTTP_202_ACCEPTED, message="{name.singular.title()} deleted.")
+        """)
+
+    content = [
+        indent(line) if line.strip() else line
+        for line in content.strip("\n").split("\n")
+    ]
+    return "\n".join(content)

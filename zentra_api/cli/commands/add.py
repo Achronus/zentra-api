@@ -4,7 +4,12 @@ from typing import Callable
 from pathlib import Path
 
 from zentra_api.cli.conf.checks import zentra_config_path
-from zentra_api.cli.constants import Import, RouteErrorCodes, RouteSuccessCodes
+from zentra_api.cli.constants import (
+    ROUTE_RESPONSE_MODEL_BLACKLIST,
+    Import,
+    RouteErrorCodes,
+    RouteSuccessCodes,
+)
 from zentra_api.cli.builder.routes import RouteBuilder
 from zentra_api.cli.constants.enums import RouteFile, RouteMethods, RouteOptions
 from zentra_api.cli.constants.routes import Name, Route, route_dict_set, route_imports
@@ -162,7 +167,9 @@ class AddRouteTasks:
     def _create_init_content(self, routes: list[Route]) -> None:
         """Creates the '__init__.py' file content."""
         response_models = [
-            route.response_model for route in routes if route.response_model
+            route.response_model
+            for route in routes
+            if route.response_model not in ROUTE_RESPONSE_MODEL_BLACKLIST
         ]
         schema_models = [route.schema_model for route in routes if route.schema_model]
         add_auth = any([route.auth for route in routes])
@@ -191,7 +198,7 @@ class AddRouteTasks:
                 "",
                 self.api_route_str,
                 "\n",
-                "\n".join([route.to_str() + "\n\n" for route in routes]),
+                "\n".join([route.to_str(self.name) + "\n\n" for route in routes]),
             ]
         )
 
