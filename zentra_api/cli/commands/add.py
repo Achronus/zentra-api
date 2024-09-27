@@ -163,6 +163,9 @@ class AddRouteTasks:
         self.schema_content = None
         self.response_content = None
 
+        self.routes = self._get_routes()
+        self.add_auth = any([route.auth for route in self.routes])
+
     def _build_base_schema_models(self) -> str:
         """Creates the content for the main schema models to put in the 'schema.py' file."""
         name_title = self.name.singular.title()
@@ -192,15 +195,16 @@ class AddRouteTasks:
 
         return routes
 
-    def _create_init_content(self, routes: list[Route]) -> None:
+    def _create_init_content(self) -> None:
         """Creates the '__init__.py' file content."""
-        add_auth = any([route.auth for route in routes])
         response_models = [
             route.response_model
-            for route in routes
+            for route in self.routes
             if route.response_model not in ROUTE_RESPONSE_MODEL_BLACKLIST
         ]
-        schema_models = [route.schema_model for route in routes if route.schema_model]
+        schema_models = [
+            route.schema_model for route in self.routes if route.schema_model
+        ]
 
         if "c" in self.option or "u" in self.option:
             schema_models.append(f"{self.name.singular.title()}ID")
@@ -224,7 +228,7 @@ class AddRouteTasks:
                 ),
             )
 
-        file_imports: list[list[Import]] = route_imports(add_auth=add_auth)
+        file_imports: list[list[Import]] = route_imports(add_auth=self.add_auth)
         file_imports.insert(1, local_file_imports)
         file_imports = Imports(items=file_imports).to_str()
 
@@ -234,18 +238,18 @@ class AddRouteTasks:
                 "",
                 self.api_route_str,
                 "\n",
-                "\n".join([route.to_str(self.name) + "\n\n" for route in routes]),
+                "\n".join([route.to_str(self.name) + "\n\n" for route in self.routes]),
             ]
         )
 
-    def _create_schema_content(self, routes: list[Route]) -> None:
+    def _create_schema_content(self) -> None:
         """Creates the 'schema.py' file content."""
         file_imports = [
             [Import(root="pydantic", items=["BaseModel", "Field"], add_dot=False)]
         ]
         route_schema_models = [
             route.schema_model_content()
-            for route in routes
+            for route in self.routes
             if route.method not in [RouteMethods.GET, RouteMethods.DELETE]
         ]
         self.schema_content = "\n".join(
@@ -258,13 +262,13 @@ class AddRouteTasks:
             ]
         )
 
-    def _create_responses_content(self, routes: list[Route]) -> None:
+    def _create_responses_content(self) -> None:
         """Creates the 'responses.py' file content."""
         name = self.name.singular.title()
         schema_models = [name, f"{name}ID"]
         response_classes = [
             route.response_model_class(self.name)
-            for route in routes
+            for route in self.routes
             if route.method != RouteMethods.DELETE
         ]
 
@@ -317,10 +321,9 @@ class AddRouteTasks:
         if not self.route_path.exists():
             tasks.append(self._create_route_files)
 
-        routes = self._get_routes()
-        self._create_init_content(routes)
-        self._create_schema_content(routes)
-        self._create_responses_content(routes)
+        self._create_init_content()
+        self._create_schema_content()
+        self._create_responses_content()
 
         tasks.extend([self._update_files])
         return tasks
