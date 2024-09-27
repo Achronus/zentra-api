@@ -7,6 +7,7 @@ from typer.testing import CliRunner
 from zentra_api.cli.commands.setup import Setup
 from zentra_api.cli.main import app
 
+
 runner = CliRunner()
 
 
@@ -57,3 +58,46 @@ class TestNewKey:
 
         assert result.exit_code == 0
         assert len(result.output.strip()) == target_len
+
+
+class TestAddRouteset:
+    @staticmethod
+    def test_default():
+        result = runner.invoke(app, ["add-routeset", "projects"])
+        assert result.exit_code == 0
+
+    @staticmethod
+    def test_optional():
+        result = runner.invoke(app, ["add-routeset", "projects", "rud"])
+        assert result.exit_code == 0
+
+    @staticmethod
+    def test_invalid_name():
+        result = runner.invoke(app, ["add-routeset", "colours123"])
+        assert result.exit_code != 0
+
+    @staticmethod
+    def test_invalid_name_special_characters():
+        result = runner.invoke(app, ["add-routeset", "project@123"])
+        assert result.exit_code != 0
+
+    @staticmethod
+    def test_missing_name():
+        result = runner.invoke(app, ["add-routeset"])
+        assert result.exit_code != 0
+        assert "Missing argument 'NAME'" in result.output
+
+    @staticmethod
+    def test_invalid_option():
+        result = runner.invoke(app, ["add-routeset", "projects", "xyz"])
+        assert result.exit_code != 0
+
+    @staticmethod
+    def test_empty_option():
+        result = runner.invoke(app, ["add-routeset", "projects", ""])
+        assert result.exit_code != 0
+
+    @staticmethod
+    def test_uppercase_name():
+        result = runner.invoke(app, ["add-routeset", "PROJECTS"])
+        assert result.exit_code == 0
