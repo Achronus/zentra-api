@@ -6,8 +6,8 @@ authors = ["Ryan Partridge <rpartridge101@gmail.com>"]
 license = "MIT License"
 readme = "README.md"
 repository = "https://github.com/Achronus/zentra-api"
-# homepage = "https://zentra.achronus.dev/"
-# documentation = "https://zentra.achronus.dev/"
+homepage = "https://zentra.achronus.dev/api"
+documentation = "https://zentra.achronus.dev/api"
 
 # https://pypi.org/classifiers/
 classifiers = [
