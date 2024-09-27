@@ -7,6 +7,7 @@ from sqlalchemy.orm import Session
 
 
 ROUTE_PREFIX = "/api/auth"
+TOKEN_PREFIX = f"{ROUTE_PREFIX}/token"
 
 
 class TestGetDB:
@@ -67,7 +68,7 @@ class TestAuth:
             "password": "testpassword",
         }
         client.post(f"{ROUTE_PREFIX}/register", json=user_data)
-        response = client.post(f"{ROUTE_PREFIX}/token", data=user_data)
+        response = client.post(f"{TOKEN_PREFIX}", data=user_data)
         assert response.status_code == 202
         assert "access_token" in response.json()
 
@@ -77,7 +78,7 @@ class TestAuth:
             "username": "invaliduser",
             "password": "invalidpassword",
         }
-        response = client.post(f"{ROUTE_PREFIX}/token", data=user_data)
+        response = client.post(f"{TOKEN_PREFIX}", data=user_data)
         assert response.status_code == 401
 
     @staticmethod
@@ -87,7 +88,7 @@ class TestAuth:
             "password": "testpassword",
         }
         client.post(f"{ROUTE_PREFIX}/register", json=user_data)
-        response = client.post(f"{ROUTE_PREFIX}/token", data=user_data)
+        response = client.post(f"{TOKEN_PREFIX}", data=user_data)
         access_token = response.json()["access_token"]
 
         headers = {"Authorization": f"Bearer {access_token}"}
@@ -105,7 +106,7 @@ class TestAuth:
         response = client.post(f"{ROUTE_PREFIX}/register", json=user_data)
         assert response.status_code == 201
 
-        response = client.post(f"{ROUTE_PREFIX}/token", data=user_data)
+        response = client.post(f"{TOKEN_PREFIX}", data=user_data)
         access_token = response.json()["access_token"]
 
         headers = {"Authorization": f"Bearer {access_token}"}
@@ -126,7 +127,7 @@ class TestAuth:
             json={"username": "testuser4", "password": "password"},
         )
         response = client.post(
-            f"{ROUTE_PREFIX}/token",
+            f"{TOKEN_PREFIX}",
             data={"username": "testuser4", "password": "wrong"},
         )
         assert response.status_code == 401
@@ -139,17 +140,15 @@ class TestAuth:
             "password": "testpassword",
         }
         client.post(f"{ROUTE_PREFIX}/register", json=user_data)
-        response = client.post(f"{ROUTE_PREFIX}/token", data=user_data)
+        response = client.post(f"{TOKEN_PREFIX}", data=user_data)
         access_token = response.json()["access_token"]
 
         headers = {"Authorization": f"Bearer {access_token}"}
-        response = client.post(
-            f"{ROUTE_PREFIX}/verify-token/{access_token}", headers=headers
-        )
+        response = client.post(f"{TOKEN_PREFIX}/verify/{access_token}", headers=headers)
         assert response.status_code == 200
         assert response.json()["message"] == "Token is valid."
 
     @staticmethod
     def test_verify_invalid_token(client: TestClient):
-        response = client.post(f"{ROUTE_PREFIX}/verify-token/invalidtoken")
+        response = client.post(f"{TOKEN_PREFIX}/verify/invalidtoken")
         assert response.status_code == 401
