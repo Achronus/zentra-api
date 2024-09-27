@@ -1,4 +1,5 @@
 from pathlib import Path
+import textwrap
 from unittest import mock
 import pytest
 import typer
@@ -13,7 +14,11 @@ from zentra_api.cli.commands.add import (
 from zentra_api.cli.commands.setup import Setup
 from zentra_api.cli.constants import RouteErrorCodes, RouteSuccessCodes
 from zentra_api.cli.constants.enums import RouteOptions
-from zentra_api.cli.constants.routes import Name, route_dict_set
+from zentra_api.cli.constants.routes import Name, Route, route_dict_set
+
+
+def strip_spacing(text: str) -> str:
+    return textwrap.dedent(text).strip("\n")
 
 
 class TestStoreName:
@@ -145,3 +150,179 @@ class TestAddRouteTasks:
             routes = route_dict_set(name)
             keys = ["u", "d"]
             assert tasks._get_routes() == [routes[key] for key in keys]
+
+    class TestRouteInitOutput:
+        @pytest.fixture
+        def name_products(self) -> Name:
+            return Name(singular="product", plural="products")
+
+        @staticmethod
+        def test_get_multi(name_products: Name):
+            route = Route(
+                name=name_products.plural,
+                method="get",
+                route="",
+                status_code=200,
+                multi=True,
+            )
+
+            target = strip_spacing("""
+            @router.get(
+                "",
+                status_code=status.HTTP_200_OK,
+                responses=get_response_models([401, 403]),
+                response_model=GetProductsResponse,
+            )
+            async def get_products(db: DB_DEPEND, current_user: ACTIVE_USER_DEPEND):
+                products = CONNECT.products.get_multiple(db, skip=0, limit=10)
+
+                return GetProductsResponse(
+                    code=status.HTTP_200_OK,
+                    data=products.model_dump(),
+                )""")
+            assert route.to_str(name_products) == target
+
+        @staticmethod
+        def test_get_single(name_products: Name):
+            route = Route(
+                name=name_products.singular,
+                method="get",
+                route="/{id}",
+                status_code=200,
+            )
+
+            target = strip_spacing("""
+            @router.get(
+                "/{id}",
+                status_code=status.HTTP_200_OK,
+                responses=get_response_models([401, 403]),
+                response_model=GetProductResponse,
+            )
+            async def get_product(id: int, db: DB_DEPEND, current_user: ACTIVE_USER_DEPEND):
+                product = CONNECT.products.get(db, id)
+
+                return GetProductResponse(
+                    code=status.HTTP_200_OK,
+                    data=product.model_dump(),
+                )""")
+            assert route.to_str(name_products) == target
+
+        @staticmethod
+        def test_post_single(name_products: Name):
+            route = Route(
+                name=name_products.singular,
+                method="post",
+                route="",
+                status_code=201,
+            )
+
+            target = strip_spacing("""
+            @router.post(
+                "",
+                status_code=status.HTTP_201_CREATED,
+                responses=get_response_models([400, 401, 403]),
+                response_model=CreateProductResponse,
+            )
+            async def create_product(product: ProductCreate, db: DB_DEPEND, current_user: ACTIVE_USER_DEPEND):
+                exists = CONNECT.products.get(db, product.id)
+
+                if exists:
+                    raise HTTPException(
+                        status.HTTP_400_BAD_REQUEST, detail="Product already exists."
+                    )
+
+                product = CONNECT.products.create(db, product.model_dump())
+                return CreateProductResponse(
+                    code=status.HTTP_201_CREATED,
+                    data=product.model_dump(),
+                )""")
+            assert route.to_str(name_products) == target
+
+        @staticmethod
+        def test_put_single(name_products: Name):
+            route = Route(
+                name=name_products.singular,
+                method="put",
+                route="/{id}",
+                status_code=202,
+            )
+
+            target = strip_spacing("""
+            @router.put(
+                "/{id}",
+                status_code=status.HTTP_202_ACCEPTED,
+                responses=get_response_models([400, 401, 403]),
+                response_model=UpdateProductResponse,
+            )
+            async def update_product(id: int, product: ProductUpdate, db: DB_DEPEND, current_user: ACTIVE_USER_DEPEND):
+                exists = CONNECT.products.update(db, id, product.model_dump())
+
+                if not exists:
+                    raise HTTPException(
+                        status.HTTP_400_BAD_REQUEST, detail="Product does not exist."
+                    )
+
+                product = CONNECT.products.get(db, id)
+                return UpdateProductResponse(
+                    code=status.HTTP_202_ACCEPTED,
+                    data=product.model_dump(),
+                )""")
+            assert route.to_str(name_products) == target
+
+        @staticmethod
+        def test_patch_single(name_products: Name):
+            route = Route(
+                name=name_products.singular,
+                method="patch",
+                route="/{id}",
+                status_code=202,
+            )
+
+            target = strip_spacing("""
+            @router.patch(
+                "/{id}",
+                status_code=status.HTTP_202_ACCEPTED,
+                responses=get_response_models([400, 401, 403]),
+                response_model=UpdateProductResponse,
+            )
+            async def update_product(id: int, product: ProductUpdate, db: DB_DEPEND, current_user: ACTIVE_USER_DEPEND):
+                exists = CONNECT.products.update(db, id, product.model_dump())
+
+                if not exists:
+                    raise HTTPException(
+                        status.HTTP_400_BAD_REQUEST, detail="Product does not exist."
+                    )
+
+                product = CONNECT.products.get(db, id)
+                return UpdateProductResponse(
+                    code=status.HTTP_202_ACCEPTED,
+                    data=product.model_dump(),
+                )""")
+            assert route.to_str(name_products) == target
+
+        @staticmethod
+        def test_delete_single(name_products: Name):
+            route = Route(
+                name=name_products.singular,
+                method="delete",
+                route="/{id}",
+                status_code=202,
+            )
+
+            target = strip_spacing("""
+            @router.delete(
+                "/{id}",
+                status_code=status.HTTP_202_ACCEPTED,
+                responses=get_response_models([400, 401, 403]),
+                response_model=SuccessMsgResponse,
+            )
+            async def delete_product(id: int, db: DB_DEPEND, current_user: ACTIVE_USER_DEPEND):
+                exists = CONNECT.products.delete(db, id)
+
+                if not exists:
+                    raise HTTPException(
+                        status.HTTP_400_BAD_REQUEST, detail="Product does not exist."
+                    )
+
+                return SuccessMsgResponse(code=status.HTTP_202_ACCEPTED, message="Product deleted.")""")
+            assert route.to_str(name_products) == target
