@@ -5,8 +5,8 @@ Utility functions for core logic in Zentra API projects.
 from sqlalchemy import Engine, create_engine, make_url, URL
 from sqlalchemy.exc import ArgumentError
 
-from pydantic import AnyUrl, validate_call, ConfigDict
-from pydantic_core import PydanticCustomError
+from pydantic import validate_call, ConfigDict
+from pydantic_core import PydanticCustomError, Url, ValidationError
 
 
 @validate_call(validate_return=True, config=ConfigDict(arbitrary_types_allowed=True))
@@ -55,7 +55,7 @@ def days_to_mins(days: int) -> int:
 
 
 @validate_call(validate_return=True)
-def parse_cors(v: list | str) -> list[AnyUrl]:
+def parse_cors(v: list | str) -> list[str]:
     """
     Validates a list, or comma separated string, of COR origin URLs.
     Returns them as a list of URLs.
@@ -64,15 +64,24 @@ def parse_cors(v: list | str) -> list[AnyUrl]:
         v (list | str): A list or comma separated string of URLs.
 
     Returns:
-        list[AnyUrl]: A list of URLs.
+        list[str]: A list of URLs.
     """
-    if isinstance(v, str) and not v.startswith("["):
-        return [i.strip() for i in v.split(",")]
-    elif isinstance(v, list):
-        return v
-    else:
-        raise PydanticCustomError(
-            "invalid_cors",
-            f"'{v}' is not a valid COR origin URL.",
-            dict(wrong_value=v),
-        )
+    if isinstance(v, str):
+        if len(v) == 0:
+            return []
+
+        v = [i.strip() for i in v.split(",")]
+
+    validated_urls = []
+    for item in v:
+        try:
+            Url(url=item)
+            validated_urls.append(item)
+        except ValidationError:
+            raise PydanticCustomError(
+                "invalid_cors",
+                f"'{item}' is not a valid COR origin URL.",
+                dict(wrong_value=item),
+            )
+
+    return validated_urls
