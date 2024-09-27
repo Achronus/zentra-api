@@ -1,7 +1,7 @@
 from pydantic import ValidationError
 import pytest
 from sqlalchemy import Engine
-from pydantic_core import PydanticCustomError, Url
+from pydantic_core import PydanticCustomError
 
 from zentra_api.core.utils import create_sql_engine, days_to_mins, parse_cors
 
@@ -40,16 +40,13 @@ class TestDaysToMins:
 class TestParseCors:
     @staticmethod
     def test_list():
-        urls = [Url("http://example.com"), Url("https://example2.com")]
-        parsed_urls = parse_cors(urls)
-        assert parsed_urls == urls
+        result = parse_cors(v=["http://127.0.0.1", "http://localhost:8080"])
+        assert result == ["http://127.0.0.1", "http://localhost:8080"]
 
     @staticmethod
     def test_string():
-        url_string = "http://example.com, https://example2.com"
-        parsed_urls = parse_cors(url_string)
-        target = [Url("http://example.com"), Url("https://example2.com")]
-        assert parsed_urls == target
+        result = parse_cors(v="http://127.0.0.1,http://localhost:8080")
+        assert result == ["http://127.0.0.1", "http://localhost:8080"]
 
     @staticmethod
     def test_invalid_input():
@@ -57,6 +54,10 @@ class TestParseCors:
             parse_cors(12345)
 
     @staticmethod
+    def test_invalid_string():
+        with pytest.raises(PydanticCustomError):
+            parse_cors("test123")
+
+    @staticmethod
     def test_empty_string():
-        with pytest.raises(ValidationError):
-            parse_cors("")
+        assert parse_cors("") == []

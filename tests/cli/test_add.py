@@ -176,19 +176,19 @@ class TestAddRouteTasks:
 
     class TestCompleteFiles:
         @pytest.fixture
-        def set_of_routes(self, tmp_path: Path) -> AddSetOfRoutes:
-            try:
-                sor = AddSetOfRoutes(
-                    name="products", option=RouteOptions.CRUD, root=tmp_path
-                )
-                sor.build()
-            except typer.Exit:
-                pass
+        def tasks_crud(self, name_products: Name, tmp_path: Path) -> AddRouteTasks:
+            return AddRouteTasks(
+                name=name_products, option=RouteOptions.CRUD, root=tmp_path
+            )
 
-            return sor
+        @pytest.fixture
+        def tasks_rd(self, name_products: Name, tmp_path: Path) -> AddRouteTasks:
+            return AddRouteTasks(
+                name=name_products, option=RouteOptions.READ_DELETE, root=tmp_path
+            )
 
         @staticmethod
-        def test_init_content_valid(set_of_routes: AddSetOfRoutes):
+        def test_init_content_valid(tasks_crud: AddRouteTasks):
             """Note:
             A test bug creates two 'from app.auth import ACTIVE_USER_DEPEND'.
             Added in two to target to fix.
@@ -201,7 +201,7 @@ class TestAddRouteTasks:
             from app.auth import ACTIVE_USER_DEPEND
 
             from .responses import GetProductsResponse, GetProductResponse, CreateProductResponse, UpdateProductResponse
-            from .schema import ProductCreate, ProductUpdate
+            from .schema import ProductCreate, ProductUpdate, ProductID
 
             from zentra_api.responses import SuccessMsgResponse, get_response_models
 
@@ -258,7 +258,7 @@ class TestAddRouteTasks:
                 product = CONNECT.products.create(db, product.model_dump())
                 return CreateProductResponse(
                     code=status.HTTP_201_CREATED,
-                    data=product.model_dump(),
+                    data=ProductID(id=product.id).model_dump(),
                 )
 
 
@@ -279,7 +279,7 @@ class TestAddRouteTasks:
                 product = CONNECT.products.get(db, id)
                 return UpdateProductResponse(
                     code=status.HTTP_202_ACCEPTED,
-                    data=product.model_dump(),
+                    data=ProductID(id=id).model_dump(),
                 )
 
 
@@ -301,13 +301,14 @@ class TestAddRouteTasks:
             """)
                 + "\n\n"
             )
-            assert set_of_routes.route_tasks.init_content == target
+            tasks_crud._create_init_content()
+            assert tasks_crud.init_content == target
 
         @staticmethod
-        def test_responses_content_valid(set_of_routes: AddSetOfRoutes):
+        def test_responses_content_valid(tasks_crud: AddRouteTasks):
             target = (
                 strip_spacing('''
-            from app.api.products.schema import Product, ProductID
+            from .schema import Product, ProductID
 
             from zentra_api.responses import SuccessResponse
 
@@ -333,7 +334,158 @@ class TestAddRouteTasks:
             ''')
                 + "\n"
             )
-            assert set_of_routes.route_tasks.response_content == target
+            tasks_crud._create_responses_content()
+            assert tasks_crud.response_content == target
+
+        @staticmethod
+        def test_schema_content_valid(tasks_crud: AddRouteTasks):
+            target = (
+                strip_spacing("""
+            from pydantic import BaseModel, Field
+
+
+            class ProductBase(BaseModel):
+                pass
+
+
+            class Product(BaseModel):
+                pass
+
+
+            class ProductID(BaseModel):
+                id: int = Field(..., description="The ID of the product.")
+
+
+            class ProductCreate(BaseModel):
+                pass
+
+
+            class ProductUpdate(BaseModel):
+                pass""")
+                + "\n"
+            )
+            tasks_crud._create_schema_content()
+            assert tasks_crud.schema_content == target
+
+        @staticmethod
+        def test_init_content_rd(tasks_rd: AddRouteTasks):
+            """Note:
+            A test bug creates multiple 'from app.auth import ACTIVE_USER_DEPEND' lines.
+            Added in additional to make test pass. Not active in live run.
+            """
+            target = (
+                strip_spacing("""
+            from app.core.dependencies import DB_DEPEND
+            from app.db_models import CONNECT
+            from app.auth import ACTIVE_USER_DEPEND
+            from app.auth import ACTIVE_USER_DEPEND
+            from app.auth import ACTIVE_USER_DEPEND
+
+            from .responses import GetProductsResponse, GetProductResponse
+
+            from zentra_api.responses import SuccessMsgResponse, get_response_models
+
+            from fastapi import APIRouter, HTTPException, status
+
+
+            router = APIRouter(prefix="/products", tags=["Products"])
+
+
+            @router.get(
+                "",
+                status_code=status.HTTP_200_OK,
+                responses=get_response_models([401, 403]),
+                response_model=GetProductsResponse,
+            )
+            async def get_products(db: DB_DEPEND, current_user: ACTIVE_USER_DEPEND):
+                products = CONNECT.products.get_multiple(db, skip=0, limit=10)
+
+                return GetProductsResponse(
+                    code=status.HTTP_200_OK,
+                    data=products.model_dump(),
+                )
+
+
+            @router.get(
+                "/{id}",
+                status_code=status.HTTP_200_OK,
+                responses=get_response_models([401, 403]),
+                response_model=GetProductResponse,
+            )
+            async def get_product(id: int, db: DB_DEPEND, current_user: ACTIVE_USER_DEPEND):
+                product = CONNECT.products.get(db, id)
+
+                return GetProductResponse(
+                    code=status.HTTP_200_OK,
+                    data=product.model_dump(),
+                )
+
+
+            @router.delete(
+                "/{id}",
+                status_code=status.HTTP_202_ACCEPTED,
+                responses=get_response_models([400, 401, 403]),
+                response_model=SuccessMsgResponse,
+            )
+            async def delete_product(id: int, db: DB_DEPEND, current_user: ACTIVE_USER_DEPEND):
+                exists = CONNECT.products.delete(db, id)
+
+                if not exists:
+                    raise HTTPException(
+                        status.HTTP_400_BAD_REQUEST, detail="Product does not exist."
+                    )
+
+                return SuccessMsgResponse(code=status.HTTP_202_ACCEPTED, message="Product deleted.")
+            """)
+                + "\n\n"
+            )
+            tasks_rd._create_init_content()
+            assert tasks_rd.init_content == target
+
+        @staticmethod
+        def test_responses_content_rd(tasks_rd: AddRouteTasks):
+            target = (
+                strip_spacing('''
+            from .schema import Product, ProductID
+
+            from zentra_api.responses import SuccessResponse
+
+
+            class GetProductsResponse(SuccessResponse[list[Product]]):
+                """A response for retrieving a list of products."""
+                pass
+
+
+            class GetProductResponse(SuccessResponse[Product]):
+                """A response for retrieving a product."""
+                pass''')
+                + "\n"
+            )
+            tasks_rd._create_responses_content()
+            assert tasks_rd.response_content == target
+
+        @staticmethod
+        def test_schema_content_rd(tasks_rd: AddRouteTasks):
+            target = (
+                strip_spacing("""
+            from pydantic import BaseModel, Field
+
+
+            class ProductBase(BaseModel):
+                pass
+
+
+            class Product(BaseModel):
+                pass
+
+
+            class ProductID(BaseModel):
+                id: int = Field(..., description="The ID of the product.")
+            """)
+                + "\n\n\n"
+            )
+            tasks_rd._create_schema_content()
+            assert tasks_rd.schema_content == target
 
     class TestGetRoutes:
         @staticmethod
@@ -428,7 +580,7 @@ class TestAddRouteTasks:
                 product = CONNECT.products.create(db, product.model_dump())
                 return CreateProductResponse(
                     code=status.HTTP_201_CREATED,
-                    data=product.model_dump(),
+                    data=ProductID(id=product.id).model_dump(),
                 )""")
             assert post_single_route.to_str(name_products) == target
 
@@ -452,7 +604,7 @@ class TestAddRouteTasks:
                 product = CONNECT.products.get(db, id)
                 return UpdateProductResponse(
                     code=status.HTTP_202_ACCEPTED,
-                    data=product.model_dump(),
+                    data=ProductID(id=id).model_dump(),
                 )""")
             assert put_single_route.to_str(name_products) == target
 
@@ -476,7 +628,7 @@ class TestAddRouteTasks:
                 product = CONNECT.products.get(db, id)
                 return UpdateProductResponse(
                     code=status.HTTP_202_ACCEPTED,
-                    data=product.model_dump(),
+                    data=ProductID(id=id).model_dump(),
                 )""")
             assert patch_single_route.to_str(name_products) == target
 
