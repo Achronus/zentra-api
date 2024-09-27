@@ -2,6 +2,7 @@ import pytest
 from types import ModuleType
 
 
+from zentra_api.cli.utils import indent
 from zentra_api.utils.package import load_module, package_path
 from zentra_api.responses.utils import build_response, get_code_status, merge_dicts_list
 
@@ -82,3 +83,15 @@ class TestMergeDictsList:
         dict3 = {"d": 4, "e": 5}
         merged = merge_dicts_list([dict1, dict2, dict3])
         assert merged == {"a": 1, "b": 2, "c": 3, "d": 4, "e": 5}
+
+
+class TestIndent:
+    @staticmethod
+    def test_four_spaces():
+        result = indent("test string")
+        assert result == "    test string"
+
+    @staticmethod
+    def test_two_spaces():
+        result = indent("test string", spaces=2)
+        assert result == "  test string"

@@ -140,7 +140,7 @@ class TestHTTPDetails:
             "status": "success",
             "code": 200,
             "response": "200_OK",
-            "message": "Request successful, resource returned.",
+            "message": "Request successful.",
             "headers": None,
         }
         assert result.response.model_dump() == target

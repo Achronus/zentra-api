@@ -7,6 +7,7 @@ from fastapi import Depends
 from fastapi.security import OAuth2PasswordRequestForm
 from sqlalchemy.orm import Session
 
-db_dependency = Annotated[Session, Depends(get_db)]
-oauth2_dependency = Annotated[str, Depends(SETTINGS.AUTH.oauth2_scheme)]
-oauth2_form_dependency = Annotated[OAuth2PasswordRequestForm, Depends()]
+DB_DEPEND = Annotated[Session, Depends(get_db)]
+
+OAUTH2_DEPEND = Annotated[str, Depends(SETTINGS.AUTH.oauth2_scheme)]
+OAUTH2_FORM_DEPEND = Annotated[OAuth2PasswordRequestForm, Depends()]

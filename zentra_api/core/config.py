@@ -1,3 +1,7 @@
+"""
+Configuration models for Zentra API projects. Settings are modified using a `.env` file.
+"""
+
 from typing import Self
 
 from pydantic_core import PydanticCustomError
@@ -12,7 +16,21 @@ from sqlalchemy.exc import ArgumentError
 
 
 class EmailConfig(BaseModel):
-    """Storage container for email settings."""
+    """
+    Storage container for email settings.
+
+    Parameters:
+        SMTP_TLS (bool, optional): Whether to use TLS for SMTP. Defaults to True.
+        SMTP_SSL (bool, optional): Whether to use SSL for SMTP. Defaults to False.
+        SMTP_PORT (int, optional): The port for the SMTP server. Defaults to 587.
+        SMTP_HOST (str | None, optional): The host for the SMTP server. Defaults to None.
+        SMTP_USER (str | None, optional): The user for the SMTP server. Defaults to None.
+        SMTP_PASSWORD (str | None, optional): The password for the SMTP server. Defaults to None.
+        TEST_USER (EmailStr, optional): The test user email. Defaults to "test@example.com".
+        FROM_EMAIL (EmailStr | None, optional): The sender's email. Defaults to None.
+        FROM_NAME (str | None, optional): The sender's name. Defaults to None.
+        RESET_TOKEN_EXPIRE_HOURS (int, optional): The number of hours a reset token is valid for. Defaults to 48.
+    """
 
     SMTP_TLS: bool = True
     SMTP_SSL: bool = False
@@ -34,7 +52,14 @@ class EmailConfig(BaseModel):
 
 
 class DatabaseConfig(BaseModel):
-    """Storage container for database settings."""
+    """
+    Storage container for database settings.
+
+    Parameters:
+        URL (str): The database URL.
+        FIRST_SUPERUSER (EmailStr): The first superuser's email.
+        FIRST_SUPERUSER_PASSWORD (str): The first superuser's password.
+    """
 
     URL: str
 

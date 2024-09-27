@@ -12,6 +12,8 @@ from zentra_api.cli.constants import (
     MAGIC,
     ROOT_COMMAND,
     CommonErrorCodes,
+    RouteErrorCodes,
+    RouteSuccessCodes,
     SetupSuccessCodes,
 )
 
@@ -37,7 +39,16 @@ BUILD_COMMANDS = f"""
 """
 
 MISSING_PROJECT = f"""
-Have you run [yellow]{ROOT_COMMAND} init[/yellow]?
+Have you run [yellow]{ROOT_COMMAND} init[/yellow] and are 
+you in the [magenta]project[/magenta] directory?
+"""
+
+ROUTE_CREATED = """
+Access them in the [magenta]api[/magenta] directory.
+"""
+
+ROUTE_SET_EXISTS = """
+You've already created a set of API routes with this name!
 """
 
 UNKNOWN_ERROR = f"""
@@ -66,7 +77,6 @@ SUCCESS_MSG_MAP = {
     SetupSuccessCodes.ALREADY_CONFIGURED: "",
 }
 
-
 COMMON_ERROR_MAP = {
     CommonErrorCodes.TEST_ERROR: error_msg_with_checks("Test", desc=""),
     CommonErrorCodes.PROJECT_NOT_FOUND: error_msg_with_checks(
@@ -75,10 +85,25 @@ COMMON_ERROR_MAP = {
     ),
 }
 
+ROUTE_SUCCESS_MAP = {
+    RouteSuccessCodes.CREATED: success_msg_with_checks(
+        "Route set created!",
+        desc=ROUTE_CREATED,
+    ),
+}
+
+ROUTE_ERROR_MAP = {
+    RouteErrorCodes.FOLDER_EXISTS: error_msg_with_checks(
+        "Route set already exists!",
+        desc=ROUTE_SET_EXISTS,
+    ),
+}
 
 MSG_MAPPER = {
     **SUCCESS_MSG_MAP,
     **COMMON_ERROR_MAP,
+    **ROUTE_SUCCESS_MAP,
+    **ROUTE_ERROR_MAP,
 }
 
 

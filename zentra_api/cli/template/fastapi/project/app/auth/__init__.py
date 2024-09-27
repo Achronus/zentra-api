@@ -5,9 +5,9 @@ from app.auth.response import CreateUserResponse, GetUserDetailsResponse
 from app.auth.schema import CreateUser, GetUser, UserBase
 from app.core.config import security
 from app.core.dependencies import (
-    db_dependency,
-    oauth2_dependency,
-    oauth2_form_dependency,
+    DB_DEPEND,
+    OAUTH2_DEPEND,
+    OAUTH2_FORM_DEPEND,
 )
 from app.db_models import CONNECT
 from app.db_models.user import DBUser, DBUserDetails
@@ -36,7 +36,7 @@ def authenticate_user(db: Session, username: str, password: str) -> DBUser | boo
     return user
 
 
-async def get_current_user(token: oauth2_dependency, db: db_dependency) -> GetUser:
+async def get_current_user(token: OAUTH2_DEPEND, db: DB_DEPEND) -> GetUser:
     """Gets the current user based on the given token."""
     username = security.verify_access_token(token)
 
@@ -79,7 +79,7 @@ async def get_user(current_user: Annotated[GetUser, Depends(get_current_active_u
     responses=get_response_models(400),
     response_model=CreateUserResponse,
 )
-async def register_user(user: CreateUser, db: db_dependency):
+async def register_user(user: CreateUser, db: DB_DEPEND):
     exists = CONNECT.user.get_by_username(db, user.username)
 
     if exists:
@@ -103,7 +103,7 @@ async def register_user(user: CreateUser, db: db_dependency):
     responses=get_response_models(401),
     response_model=Token,
 )
-async def login_for_access_token(form_data: oauth2_form_dependency, db: db_dependency):
+async def login_for_access_token(form_data: OAUTH2_FORM_DEPEND, db: DB_DEPEND):
     user = authenticate_user(db, form_data.username, form_data.password)
 
     if not user:
@@ -124,7 +124,7 @@ async def login_for_access_token(form_data: oauth2_form_dependency, db: db_depen
     responses=get_response_models(401),
     response_model=SuccessMsgResponse,
 )
-async def verify_user_token(token: oauth2_dependency):
+async def verify_user_token(token: OAUTH2_DEPEND):
     security.verify_access_token(token)
     return SuccessMsgResponse(
         code=status.HTTP_200_OK,
@@ -151,3 +151,6 @@ async def refresh_access_token(refresh_token: str):
         refresh_token=refresh_token,
         token_type="bearer",
     )
+
+
+ACTIVE_USER_DEPEND = Annotated[GetUser, Depends(get_current_active_user)]

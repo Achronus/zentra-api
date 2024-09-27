@@ -1,10 +1,23 @@
+"""
+Utility functions for building responses.
+"""
+
 from pydantic import validate_call
 from fastapi import status
 
 
-@validate_call
+@validate_call(validate_return=True)
 def build_response(code: int, no_strip: bool = False) -> str:
-    """A utility function for building a string representation of a response code."""
+    """
+    A utility function for building a string representation of a response code.
+
+    Parameters:
+        code (int): The response code to build.
+        no_strip (bool, optional): A flag to strip the code of the `HTTP_` prefix. Defaults to `False`.
+
+    Returns:
+        str: The string representation of the response code.
+    """
     valid_codes: dict[int, str] = {}
     for item in status.__all__:
         item_code = int(item.split("_")[1])
@@ -24,9 +37,17 @@ def build_response(code: int, no_strip: bool = False) -> str:
         )
 
 
-@validate_call
+@validate_call(validate_return=True)
 def get_code_status(code: int) -> str:
-    """A utility function for retrieving the code status based on the code."""
+    """
+    A utility function for retrieving the response status based on the HTTP code.
+
+    Parameters:
+        code (int): The response code to get the status for.
+
+    Returns:
+        str: The status of the response code.
+    """
     _ = build_response(code)  # Validate code exists
 
     code_type_map = {
@@ -41,7 +62,15 @@ def get_code_status(code: int) -> str:
             return key
 
 
-@validate_call
+@validate_call(validate_return=True)
 def merge_dicts_list(dicts: list[dict]) -> dict:
-    """Merges multiple dicts into a single one and returns it."""
+    """
+    Merges multiple dicts into a single one and returns it.
+
+    Parameters:
+        dicts (list[dict]): A list of dicts to merge.
+
+    Returns:
+        dict: A single merged dict.
+    """
     return {k: v for d in dicts for k, v in d.items()}

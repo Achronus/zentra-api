@@ -1,10 +1,21 @@
+"""
+Custom base response models for API routes.
+"""
+
 from .utils import build_response
 
 from pydantic import BaseModel, Field, ValidationInfo, field_validator
 
 
 class BaseResponse(BaseModel):
-    """A base request model for API responses. Intended for client responses."""
+    """
+    A base request model for API responses. Intended for client responses.
+
+    Parameters:
+        status (str): The status of the response.
+        code (int): The HTTP response code.
+        response (str | None): The description for the type of HTTP response. Created dynamically. Cannot be assigned manually.
+    """
 
     status: str = Field(
         ...,
@@ -25,7 +36,16 @@ class BaseResponse(BaseModel):
 
 
 class BaseSuccessResponse(BaseResponse):
-    """A base request model for successful API responses. Intended for client responses."""
+    """
+    A base request model for successful API responses. Intended for client responses.
+
+    Parameters:
+        status (str): The status of the response.
+        code (int): The HTTP response code.
+        response (str | None): The description for the type of HTTP response. Created dynamically. Cannot be assigned manually.
+        data (BaseModel): The response data.
+        headers (dict[str, str] | None): The headers to send with the response (optional).
+    """
 
     status: str = Field(
         default="success",

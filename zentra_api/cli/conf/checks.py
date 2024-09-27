@@ -5,16 +5,16 @@ from pydantic import validate_call
 
 
 @validate_call(validate_return=True)
-def zentra_root_path() -> Path | None:
+def zentra_config_path() -> Path | None:
     """
-    Searches for the `zentra.root` file by traversing up the directory tree from the current directory.
+    Searches for the `zentra.config.json` file by traversing up the directory tree from the current directory.
 
     If found, returns its `Path`. Otherwise, `None`.
     """
     current_dir = Path(os.getcwd())
 
     while True:
-        potential_root = Path(current_dir, "zentra.root")
+        potential_root = Path(current_dir, "zentra.config.json")
         if potential_root.is_file():
             return potential_root
 
