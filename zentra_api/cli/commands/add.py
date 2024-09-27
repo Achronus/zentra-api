@@ -1,5 +1,6 @@
 import json
 import os
+import textwrap
 from typing import Callable
 from pathlib import Path
 
@@ -162,6 +163,24 @@ class AddRouteTasks:
         self.schema_content = None
         self.response_content = None
 
+    def _build_base_schema_models(self) -> str:
+        """Creates the content for the main schema models to put in the 'schema.py' file."""
+        name_title = self.name.singular.title()
+        name_lower = self.name.singular
+
+        return textwrap.dedent(f"""
+        class {name_title}Base(BaseModel):
+            pass
+
+
+        class {name_title}(BaseModel):
+            pass
+
+
+        class {name_title}ID(BaseModel):
+            id: int = Field(..., description="The ID of the {name_lower}.")
+        """).lstrip("\n")
+
     def _get_routes(self) -> list[Route]:
         """Retrieves the routes from the route map."""
         routes = []
@@ -175,30 +194,38 @@ class AddRouteTasks:
 
     def _create_init_content(self, routes: list[Route]) -> None:
         """Creates the '__init__.py' file content."""
+        add_auth = any([route.auth for route in routes])
         response_models = [
             route.response_model
             for route in routes
             if route.response_model not in ROUTE_RESPONSE_MODEL_BLACKLIST
         ]
         schema_models = [route.schema_model for route in routes if route.schema_model]
-        add_auth = any([route.auth for route in routes])
 
-        folder_imports = [
+        if "c" in self.option or "u" in self.option:
+            schema_models.append(f"{self.name.singular.title()}ID")
+
+        local_file_imports = [
             Import(
                 root=".",
                 modules=[RouteFile.RESPONSES.value.split(".")[0]],
                 items=response_models,
                 add_dot=False,
-            ),
-            Import(
-                root=".",
-                modules=[RouteFile.SCHEMA.value.split(".")[0]],
-                items=schema_models,
-                add_dot=False,
-            ),
+            )
         ]
+
+        if schema_models:
+            local_file_imports.append(
+                Import(
+                    root=".",
+                    modules=[RouteFile.SCHEMA.value.split(".")[0]],
+                    items=schema_models,
+                    add_dot=False,
+                ),
+            )
+
         file_imports: list[list[Import]] = route_imports(add_auth=add_auth)
-        file_imports.insert(1, folder_imports)
+        file_imports.insert(1, local_file_imports)
         file_imports = Imports(items=file_imports).to_str()
 
         self.init_content = "\n".join(
@@ -213,7 +240,23 @@ class AddRouteTasks:
 
     def _create_schema_content(self, routes: list[Route]) -> None:
         """Creates the 'schema.py' file content."""
-        pass
+        file_imports = [
+            [Import(root="pydantic", items=["BaseModel", "Field"], add_dot=False)]
+        ]
+        route_schema_models = [
+            route.schema_model_content()
+            for route in routes
+            if route.method not in [RouteMethods.GET, RouteMethods.DELETE]
+        ]
+        self.schema_content = "\n".join(
+            [
+                Imports(items=file_imports).to_str(),
+                "",
+                self._build_base_schema_models()
+                + "\n\n"
+                + "\n\n".join(route_schema_models),
+            ]
+        )
 
     def _create_responses_content(self, routes: list[Route]) -> None:
         """Creates the 'responses.py' file content."""
@@ -228,9 +271,10 @@ class AddRouteTasks:
         file_imports = [
             [
                 Import(
-                    root="app",
-                    modules=["api", self.name.plural, "schema"],
+                    root=".",
+                    modules=["schema"],
                     items=schema_models,
+                    add_dot=False,
                 )
             ],
             [
@@ -256,7 +300,7 @@ class AddRouteTasks:
     def _update_files(self) -> None:
         """Updates the '__init__.py', 'schema.py', and 'responses.py' files."""
         self.asset_paths.init_file.write_text(self.init_content)
-        # self.asset_paths.schema_file.write_text(self.schema_content)
+        self.asset_paths.schema_file.write_text(self.schema_content)
         self.asset_paths.responses_file.write_text(self.response_content)
 
     def _create_route_files(self) -> None:
@@ -275,7 +319,7 @@ class AddRouteTasks:
 
         routes = self._get_routes()
         self._create_init_content(routes)
-        # self._create_schema_content(routes)
+        self._create_schema_content(routes)
         self._create_responses_content(routes)
 
         tasks.extend([self._update_files])

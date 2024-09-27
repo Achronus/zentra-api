@@ -139,7 +139,7 @@ class Route(BaseModel):
     def model_post_init(self, __context: Any) -> None:
         self._func_name = f"{self.func_name_start()}_{self.name.lower()}"
         self._response_model = self.set_response_model()
-        self._schema_model = self.set_schema_model()
+        self._schema_model = self.set_schema_model_name()
 
         details = RouteDefaultDetails(
             method=self.method,
@@ -207,7 +207,7 @@ class Route(BaseModel):
         name = self.name.title()
         return f"{method}{name}Response"
 
-    def set_schema_model(self) -> str | None:
+    def set_schema_model_name(self) -> str | None:
         """Creates the schema model (parameter) name."""
         if self.method == RouteMethods.GET or self.method == RouteMethods.DELETE:
             return None
@@ -247,9 +247,7 @@ class Route(BaseModel):
         return "\n".join(text).rstrip()
 
     def response_model_class(self, name: Name) -> str:
-        """
-        Creates the route response model class.
-        """
+        """Creates the route response model class."""
 
         def data_type() -> str:
             """A helper method for creating the response data type T."""
@@ -268,6 +266,13 @@ class Route(BaseModel):
             """A response for {RouteResponseType[self.method.upper()].value} a {"list of " if self.multi else ''}{name.plural if self.multi else name.singular}."""
             pass
         ''').strip("\n")
+
+    def schema_model_content(self) -> str:
+        """Creates the schema model content."""
+        return textwrap.dedent(f"""
+        class {self.schema_model}(BaseModel):
+            pass
+        """).lstrip("\n")
 
 
 def route_dict_set(name: Name) -> dict[str, Route]:
@@ -383,7 +388,7 @@ def route_content(
         {out_name} = CONNECT.{name.plural}.create(db, {name.singular}.model_dump())
         return {response_model}(
             code=status.HTTP_201_CREATED,
-            data={name.singular}.model_dump(),
+            data={name.singular.title()}ID(id={out_name}.id).model_dump(),
         )
         """)
     elif method == RouteMethods.PATCH or method == RouteMethods.PUT:
@@ -398,7 +403,7 @@ def route_content(
         {out_name} = CONNECT.{name.plural}.{db_get_method()}
         return {response_model}(
             code=status.HTTP_202_ACCEPTED,
-            data={out_name}.model_dump(),
+            data={name.singular.title()}ID(id=id).model_dump(),
         )
         """)
     elif method == RouteMethods.DELETE:
