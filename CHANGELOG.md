@@ -2,6 +2,46 @@
 
 All notable changes to this project will be documented in this file.
 
+## [0.1.14] - 2024-09-27
+
+### 🚀 Features
+
+- *(config)* Added config file for managing project structure.
+- *(routeset)* Added route set group creation logic.
+- *(routeset)* Expanded created route methods to have content.
+- *(routeset)* Added `responses` content creation.
+- *(routeset)* Added `schema` content creation.
+
+### 🚜 Refactor
+
+- *(route)* Simplified and expanded `Route` creation.
+- *(routeset)* Simplified route creation.
+- *(cors)* Refactored `parse_cors` method to return `strings`.
+
+### 📚 Documentation
+
+- *(responses)* Improved docstrings for responses module.
+- *(crud)* Improved docstrings for CRUD classes.
+- *(core)* Improved docstrings for `core` module.
+- *(auth)* Improved docstrings for `auth` module.
+
+### 🎨 Styling
+
+- *(auth)* Updated dependencies to constants for usability.
+
+### 🧪 Testing
+
+- *(validation)* Added tests for missing validation methods.
+- *(routes)* Add tests for `add-routeset` command.
+- *(template)* Fixed broken template authentication tests.
+- *(routeset)* Added tests for `add-routeset` command.
+- *(route)* Added tests for expected `__init__` route output.
+- *(routeset)* Fix broken tests and add some for coverage.
+
+### Build
+
+- *(poetry)* Updated packages to latest.
+
 ## [0.1.13] - 2024-09-09
 
 ### 🚀 Features
