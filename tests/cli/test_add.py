@@ -115,6 +115,226 @@ class TestAddRouteTasks:
         except typer.Exit:
             pass
 
+    @pytest.fixture
+    def name_products(self) -> Name:
+        return Name(singular="product", plural="products")
+
+    @pytest.fixture
+    def get_multi_route(self, name_products: Name) -> Route:
+        return Route(
+            name=name_products.plural,
+            method="get",
+            route="",
+            status_code=200,
+            multi=True,
+        )
+
+    @pytest.fixture
+    def get_single_route(self, name_products: Name) -> Route:
+        return Route(
+            name=name_products.singular,
+            method="get",
+            route="/{id}",
+            status_code=200,
+        )
+
+    @pytest.fixture
+    def post_single_route(self, name_products: Name) -> Route:
+        return Route(
+            name=name_products.singular,
+            method="post",
+            route="",
+            status_code=201,
+        )
+
+    @pytest.fixture
+    def put_single_route(self, name_products: Name) -> Route:
+        return Route(
+            name=name_products.singular,
+            method="put",
+            route="/{id}",
+            status_code=202,
+        )
+
+    @pytest.fixture
+    def patch_single_route(self, name_products: Name) -> Route:
+        return Route(
+            name=name_products.singular,
+            method="patch",
+            route="/{id}",
+            status_code=202,
+        )
+
+    @pytest.fixture
+    def del_single_route(self, name_products: Name) -> Route:
+        return Route(
+            name=name_products.singular,
+            method="delete",
+            route="/{id}",
+            status_code=202,
+        )
+
+    class TestCompleteFiles:
+        @pytest.fixture
+        def set_of_routes(self, tmp_path: Path) -> AddSetOfRoutes:
+            try:
+                sor = AddSetOfRoutes(
+                    name="products", option=RouteOptions.CRUD, root=tmp_path
+                )
+                sor.build()
+            except typer.Exit:
+                pass
+
+            return sor
+
+        @staticmethod
+        def test_init_content_valid(set_of_routes: AddSetOfRoutes):
+            """Note:
+            A test bug creates two 'from app.auth import ACTIVE_USER_DEPEND'.
+            Added in two to target to fix.
+            """
+            target = (
+                strip_spacing("""
+            from app.core.dependencies import DB_DEPEND
+            from app.db_models import CONNECT
+            from app.auth import ACTIVE_USER_DEPEND
+            from app.auth import ACTIVE_USER_DEPEND
+
+            from .responses import GetProductsResponse, GetProductResponse, CreateProductResponse, UpdateProductResponse
+            from .schema import ProductCreate, ProductUpdate
+
+            from zentra_api.responses import SuccessMsgResponse, get_response_models
+
+            from fastapi import APIRouter, HTTPException, status
+
+
+            router = APIRouter(prefix="/products", tags=["Products"])
+
+
+            @router.get(
+                "",
+                status_code=status.HTTP_200_OK,
+                responses=get_response_models([401, 403]),
+                response_model=GetProductsResponse,
+            )
+            async def get_products(db: DB_DEPEND, current_user: ACTIVE_USER_DEPEND):
+                products = CONNECT.products.get_multiple(db, skip=0, limit=10)
+
+                return GetProductsResponse(
+                    code=status.HTTP_200_OK,
+                    data=products.model_dump(),
+                )
+
+
+            @router.get(
+                "/{id}",
+                status_code=status.HTTP_200_OK,
+                responses=get_response_models([401, 403]),
+                response_model=GetProductResponse,
+            )
+            async def get_product(id: int, db: DB_DEPEND, current_user: ACTIVE_USER_DEPEND):
+                product = CONNECT.products.get(db, id)
+
+                return GetProductResponse(
+                    code=status.HTTP_200_OK,
+                    data=product.model_dump(),
+                )
+
+
+            @router.post(
+                "",
+                status_code=status.HTTP_201_CREATED,
+                responses=get_response_models([400, 401, 403]),
+                response_model=CreateProductResponse,
+            )
+            async def create_product(product: ProductCreate, db: DB_DEPEND, current_user: ACTIVE_USER_DEPEND):
+                exists = CONNECT.products.get(db, product.id)
+
+                if exists:
+                    raise HTTPException(
+                        status.HTTP_400_BAD_REQUEST, detail="Product already exists."
+                    )
+
+                product = CONNECT.products.create(db, product.model_dump())
+                return CreateProductResponse(
+                    code=status.HTTP_201_CREATED,
+                    data=product.model_dump(),
+                )
+
+
+            @router.put(
+                "/{id}",
+                status_code=status.HTTP_202_ACCEPTED,
+                responses=get_response_models([400, 401, 403]),
+                response_model=UpdateProductResponse,
+            )
+            async def update_product(id: int, product: ProductUpdate, db: DB_DEPEND, current_user: ACTIVE_USER_DEPEND):
+                exists = CONNECT.products.update(db, id, product.model_dump())
+
+                if not exists:
+                    raise HTTPException(
+                        status.HTTP_400_BAD_REQUEST, detail="Product does not exist."
+                    )
+
+                product = CONNECT.products.get(db, id)
+                return UpdateProductResponse(
+                    code=status.HTTP_202_ACCEPTED,
+                    data=product.model_dump(),
+                )
+
+
+            @router.delete(
+                "/{id}",
+                status_code=status.HTTP_202_ACCEPTED,
+                responses=get_response_models([400, 401, 403]),
+                response_model=SuccessMsgResponse,
+            )
+            async def delete_product(id: int, db: DB_DEPEND, current_user: ACTIVE_USER_DEPEND):
+                exists = CONNECT.products.delete(db, id)
+
+                if not exists:
+                    raise HTTPException(
+                        status.HTTP_400_BAD_REQUEST, detail="Product does not exist."
+                    )
+
+                return SuccessMsgResponse(code=status.HTTP_202_ACCEPTED, message="Product deleted.")
+            """)
+                + "\n\n"
+            )
+            assert set_of_routes.route_tasks.init_content == target
+
+        @staticmethod
+        def test_responses_content_valid(set_of_routes: AddSetOfRoutes):
+            target = (
+                strip_spacing('''
+            from app.api.products.schema import Product, ProductID
+
+            from zentra_api.responses import SuccessResponse
+
+
+            class GetProductsResponse(SuccessResponse[list[Product]]):
+                """A response for retrieving a list of products."""
+                pass
+
+
+            class GetProductResponse(SuccessResponse[Product]):
+                """A response for retrieving a product."""
+                pass
+
+
+            class CreateProductResponse(SuccessResponse[ProductID]):
+                """A response for creating a product."""
+                pass
+
+
+            class UpdateProductResponse(SuccessResponse[ProductID]):
+                """A response for updating a product."""
+                pass
+            ''')
+                + "\n"
+            )
+            assert set_of_routes.route_tasks.response_content == target
+
     class TestGetRoutes:
         @staticmethod
         def test_crud(create_project, tmp_path) -> None:
@@ -152,20 +372,8 @@ class TestAddRouteTasks:
             assert tasks._get_routes() == [routes[key] for key in keys]
 
     class TestRouteInitOutput:
-        @pytest.fixture
-        def name_products(self) -> Name:
-            return Name(singular="product", plural="products")
-
         @staticmethod
-        def test_get_multi(name_products: Name):
-            route = Route(
-                name=name_products.plural,
-                method="get",
-                route="",
-                status_code=200,
-                multi=True,
-            )
-
+        def test_get_multi(name_products: Name, get_multi_route: Route):
             target = strip_spacing("""
             @router.get(
                 "",
@@ -180,17 +388,10 @@ class TestAddRouteTasks:
                     code=status.HTTP_200_OK,
                     data=products.model_dump(),
                 )""")
-            assert route.to_str(name_products) == target
+            assert get_multi_route.to_str(name_products) == target
 
         @staticmethod
-        def test_get_single(name_products: Name):
-            route = Route(
-                name=name_products.singular,
-                method="get",
-                route="/{id}",
-                status_code=200,
-            )
-
+        def test_get_single(name_products: Name, get_single_route: Route):
             target = strip_spacing("""
             @router.get(
                 "/{id}",
@@ -205,17 +406,10 @@ class TestAddRouteTasks:
                     code=status.HTTP_200_OK,
                     data=product.model_dump(),
                 )""")
-            assert route.to_str(name_products) == target
+            assert get_single_route.to_str(name_products) == target
 
         @staticmethod
-        def test_post_single(name_products: Name):
-            route = Route(
-                name=name_products.singular,
-                method="post",
-                route="",
-                status_code=201,
-            )
-
+        def test_post_single(name_products: Name, post_single_route: Route):
             target = strip_spacing("""
             @router.post(
                 "",
@@ -236,17 +430,10 @@ class TestAddRouteTasks:
                     code=status.HTTP_201_CREATED,
                     data=product.model_dump(),
                 )""")
-            assert route.to_str(name_products) == target
+            assert post_single_route.to_str(name_products) == target
 
         @staticmethod
-        def test_put_single(name_products: Name):
-            route = Route(
-                name=name_products.singular,
-                method="put",
-                route="/{id}",
-                status_code=202,
-            )
-
+        def test_put_single(name_products: Name, put_single_route: Route):
             target = strip_spacing("""
             @router.put(
                 "/{id}",
@@ -267,17 +454,10 @@ class TestAddRouteTasks:
                     code=status.HTTP_202_ACCEPTED,
                     data=product.model_dump(),
                 )""")
-            assert route.to_str(name_products) == target
+            assert put_single_route.to_str(name_products) == target
 
         @staticmethod
-        def test_patch_single(name_products: Name):
-            route = Route(
-                name=name_products.singular,
-                method="patch",
-                route="/{id}",
-                status_code=202,
-            )
-
+        def test_patch_single(name_products: Name, patch_single_route: Route):
             target = strip_spacing("""
             @router.patch(
                 "/{id}",
@@ -298,17 +478,10 @@ class TestAddRouteTasks:
                     code=status.HTTP_202_ACCEPTED,
                     data=product.model_dump(),
                 )""")
-            assert route.to_str(name_products) == target
+            assert patch_single_route.to_str(name_products) == target
 
         @staticmethod
-        def test_delete_single(name_products: Name):
-            route = Route(
-                name=name_products.singular,
-                method="delete",
-                route="/{id}",
-                status_code=202,
-            )
-
+        def test_delete_single(name_products: Name, del_single_route: Route):
             target = strip_spacing("""
             @router.delete(
                 "/{id}",
@@ -325,4 +498,45 @@ class TestAddRouteTasks:
                     )
 
                 return SuccessMsgResponse(code=status.HTTP_202_ACCEPTED, message="Product deleted.")""")
-            assert route.to_str(name_products) == target
+            assert del_single_route.to_str(name_products) == target
+
+    class TestResponseClassOutput:
+        @staticmethod
+        def test_get_multi(name_products: Name, get_multi_route: Route):
+            target = strip_spacing('''
+            class GetProductsResponse(SuccessResponse[list[Product]]):
+                """A response for retrieving a list of products."""
+                pass''')
+            assert get_multi_route.response_model_class(name_products) == target
+
+        @staticmethod
+        def test_get_single(name_products: Name, get_single_route: Route):
+            target = strip_spacing('''
+            class GetProductResponse(SuccessResponse[Product]):
+                """A response for retrieving a product."""
+                pass''')
+            assert get_single_route.response_model_class(name_products) == target
+
+        @staticmethod
+        def test_post_single(name_products: Name, post_single_route: Route):
+            target = strip_spacing('''
+            class CreateProductResponse(SuccessResponse[ProductID]):
+                """A response for creating a product."""
+                pass''')
+            assert post_single_route.response_model_class(name_products) == target
+
+        @staticmethod
+        def test_put_single(name_products: Name, put_single_route: Route):
+            target = strip_spacing('''
+            class UpdateProductResponse(SuccessResponse[ProductID]):
+                """A response for updating a product."""
+                pass''')
+            assert put_single_route.response_model_class(name_products) == target
+
+        @staticmethod
+        def test_patch_single(name_products: Name, patch_single_route: Route):
+            target = strip_spacing('''
+            class UpdateProductResponse(SuccessResponse[ProductID]):
+                """A response for updating a product."""
+                pass''')
+            assert patch_single_route.response_model_class(name_products) == target

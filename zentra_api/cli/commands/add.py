@@ -12,7 +12,13 @@ from zentra_api.cli.constants import (
 )
 from zentra_api.cli.builder.routes import RouteBuilder
 from zentra_api.cli.constants.enums import RouteFile, RouteMethods, RouteOptions
-from zentra_api.cli.constants.routes import Name, Route, route_dict_set, route_imports
+from zentra_api.cli.constants.routes import (
+    Name,
+    Route,
+    RouteFilepaths,
+    route_dict_set,
+    route_imports,
+)
 from zentra_api.cli.constants.models import Config, Imports
 
 import inflect
@@ -150,8 +156,11 @@ class AddRouteTasks:
         self.route_map = route_dict_set(self.name)
         self.api_route_str = create_api_router(self.name.plural)
         self.route_path = get_route_folder(self.name, self.root)
+        self.asset_paths = RouteFilepaths(root=self.route_path)
 
         self.init_content = None
+        self.schema_content = None
+        self.response_content = None
 
     def _get_routes(self) -> list[Route]:
         """Retrieves the routes from the route map."""
@@ -202,18 +211,53 @@ class AddRouteTasks:
             ]
         )
 
+    def _create_schema_content(self, routes: list[Route]) -> None:
+        """Creates the 'schema.py' file content."""
+        pass
+
+    def _create_responses_content(self, routes: list[Route]) -> None:
+        """Creates the 'responses.py' file content."""
+        name = self.name.singular.title()
+        schema_models = [name, f"{name}ID"]
+        response_classes = [
+            route.response_model_class(self.name)
+            for route in routes
+            if route.method != RouteMethods.DELETE
+        ]
+
+        file_imports = [
+            [
+                Import(
+                    root="app",
+                    modules=["api", self.name.plural, "schema"],
+                    items=schema_models,
+                )
+            ],
+            [
+                Import(
+                    root="zentra_api",
+                    modules=[RouteFile.RESPONSES.value.split(".")[0]],
+                    items=["SuccessResponse"],
+                )
+            ],
+        ]
+
+        self.response_content = (
+            "\n".join(
+                [
+                    Imports(items=file_imports).to_str(),
+                    "",
+                    "\n".join([response + "\n\n" for response in response_classes]),
+                ]
+            ).rstrip("\n")
+            + "\n"
+        )
+
     def _update_files(self) -> None:
         """Updates the '__init__.py', 'schema.py', and 'responses.py' files."""
-        init_file = Path(self.route_path, RouteFile.INIT.value)
-        init_file.write_text(self.init_content)
-
-    def _update_schema_file(self) -> None:
-        """Updates the 'schema.py' file."""
-        pass
-
-    def _update_responses_file(self) -> None:
-        """Updates the 'responses.py' file."""
-        pass
+        self.asset_paths.init_file.write_text(self.init_content)
+        # self.asset_paths.schema_file.write_text(self.schema_content)
+        self.asset_paths.responses_file.write_text(self.response_content)
 
     def _create_route_files(self) -> None:
         """Creates a new set of route files."""
@@ -231,9 +275,10 @@ class AddRouteTasks:
 
         routes = self._get_routes()
         self._create_init_content(routes)
+        # self._create_schema_content(routes)
+        self._create_responses_content(routes)
 
         tasks.extend([self._update_files])
-
         return tasks
 
     def get_tasks_for_route(self) -> list[Callable]:

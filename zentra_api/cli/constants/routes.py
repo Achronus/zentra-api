@@ -1,12 +1,15 @@
+from pathlib import Path
 import textwrap
 from typing import Any, Literal
 
 from zentra_api.cli.constants import SUCCESS_MSG_RESPONSE_MODEL, RouteImports, Import
 from zentra_api.cli.constants.enums import (
+    RouteFile,
     RouteMethodType,
     RouteMethods,
     RouteParameters,
     RouteResponseCodes,
+    RouteResponseType,
 )
 
 from pydantic import BaseModel, ConfigDict, PrivateAttr
@@ -30,6 +33,33 @@ class Name(BaseModel):
 
     singular: str
     plural: str
+
+
+class RouteFilepaths(BaseModel):
+    """A storage container for the route filepaths."""
+
+    root: Path
+
+    _init = PrivateAttr(None)
+    _schema = PrivateAttr(None)
+    _response = PrivateAttr(None)
+
+    def model_post_init(self, __context: Any) -> None:
+        self._init = Path(self.root, RouteFile.INIT.value)
+        self._schema = Path(self.root, RouteFile.SCHEMA.value)
+        self._response = Path(self.root, RouteFile.RESPONSES.value)
+
+    @property
+    def init_file(self) -> Path:
+        return self._init
+
+    @property
+    def schema_file(self) -> Path:
+        return self._schema
+
+    @property
+    def responses_file(self) -> Path:
+        return self._response
 
 
 class RouteDefaultDetails(BaseModel):
@@ -215,6 +245,29 @@ class Route(BaseModel):
             route_content(name, self.method, self.multi, self.response_model),
         ]
         return "\n".join(text).rstrip()
+
+    def response_model_class(self, name: Name) -> str:
+        """
+        Creates the route response model class.
+        """
+
+        def data_type() -> str:
+            """A helper method for creating the response data type T."""
+            dtype = name.singular.title()
+
+            if self.method != RouteMethods.GET:
+                dtype += "ID"
+
+            if self.multi:
+                return f"list[{dtype}]"
+
+            return dtype
+
+        return textwrap.dedent(f'''
+        class {self.response_model}(SuccessResponse[{data_type()}]):
+            """A response for {RouteResponseType[self.method.upper()].value} a {"list of " if self.multi else ''}{name.plural if self.multi else name.singular}."""
+            pass
+        ''').strip("\n")
 
 
 def route_dict_set(name: Name) -> dict[str, Route]:

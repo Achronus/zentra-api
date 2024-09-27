@@ -63,6 +63,16 @@ class RouteMethods(StrEnum):
         return [method.value for method in cls]
 
 
+class RouteResponseType(StrEnum):
+    """The route response type for each HTTP method."""
+
+    GET = "retrieving"
+    POST = "creating"
+    PUT = "updating"
+    PATCH = "updating"
+    DELETE = "deleting"
+
+
 class RouteMethodType(StrEnum):
     """Human readable variants of HTTP methods."""
 
