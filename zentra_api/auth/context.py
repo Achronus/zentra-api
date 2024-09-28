@@ -69,8 +69,8 @@ class BcryptContext(BaseModel):
             ```
 
         Parameters:
-            password (string): the plain password to verify
-            hashed_password (string): The hashed password to verify against
+            password (str): the plain password to verify
+            hashed_password (str): The hashed password to verify against
 
         Returns:
            bool : True if the given plain text matches, False otherwise.
